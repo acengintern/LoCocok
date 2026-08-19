@@ -27,6 +27,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/users/{user}/roles', [\App\Http\Controllers\UserController::class, 'getRoles']);
         Route::post('/users/{user}/roles', [\App\Http\Controllers\UserController::class, 'assignRole']);
         Route::delete('/users/{user}/roles/{role}', [\App\Http\Controllers\UserController::class, 'removeRole']);
+
+        // Clients
+        Route::apiResource('clients', \App\Http\Controllers\ClientController::class);
     });
 });
 

@@ -1,27 +1,24 @@
-﻿### Task 6: Factories & Seeders
+### Task 6: Clients API
 
 **Global Constraints:**
-- Roles and permissions must match LOCO TRACK specs exactly.
+- API endpoints prefixed with /api/v1/.
+- Standard API response structure using ApiResponse trait.
+- Form Requests for validation.
+- Enforce Laravel Policies on every endpoint.
+- Write Feature/API tests for every implemented module (happy path, validation, authorization, ownership/isolation).
 
-**Files:**
-- Create/Modify: ackend/database/seeders/DatabaseSeeder.php
-- Create: ackend/database/seeders/RolePermissionSeeder.php
-- Create: ackend/database/factories/*.php
+**Requirements:**
+1. Create pp/Http/Controllers/ClientController.php.
+2. Implement CRUD (GET /api/v1/clients, POST /api/v1/clients, GET /api/v1/clients/{client}, PUT /api/v1/clients/{client}, DELETE /api/v1/clients/{client}).
+3. Use FormRequests: StoreClientRequest, UpdateClientRequest. Be sure to cast or validate status against App\Enums\ClientStatus (ACTIVE, INACTIVE, PROSPECT).
+4. Create pp/Policies/ClientPolicy.php.
+   - iewAny, create: Users with iew / create permission.
+   - iew, update, delete: A user can only manage the client if they are the designated AE (pic_ae_id) or SMS (pic_sms_id), OR if they have System Administrator role (handled by Gate intercept).
+5. Ensure ClientResource returns related AE and SMS data if possible, or just standard output.
+6. Write tests in 	ests/Feature/ClientApiTest.php to verify:
+   - User who is the assigned AE CAN update the client.
+   - User who is NOT the assigned AE or SMS CANNOT update the client (403 Forbidden).
+   - Admin CAN update any client.
 
-**Instructions:**
-1. **Seed Roles and Permissions:**
-Create RolePermissionSeeder.
-Define these permissions: iew, create, edit, delete, ssign, upload, pprove, publish, export, manage.
-Define these roles: System Administrator, Creative Director, Account Executive, Social Media Specialist, Graphic Designer, Video Editor / DAV, KOL, Production Assistant.
-Give the System Administrator all permissions. Give other roles a basic set of logical permissions (e.g., Creative Director gets approve, edit, view, etc.).
-
-2. **Configure DatabaseSeeder:**
-Ensure RolePermissionSeeder is called from DatabaseSeeder.
-
-3. **Create Factories:**
-Create basic valid factories for User, Team, Client, Project to facilitate testing.
-
-4. **Verify Database Seeder runs successfully:**
-Run php artisan migrate:fresh --seed in the ackend directory (using SQLite if MySQL isn't available).
-
+Ensure tests pass (php artisan test).
 Commit your changes, then write your report to .superpowers/sdd/task-6-report.md.

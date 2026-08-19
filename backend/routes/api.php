@@ -34,6 +34,11 @@ Route::prefix('v1')->group(function () {
         // Projects
         Route::apiResource('projects', \App\Http\Controllers\ProjectController::class);
         Route::apiResource('projects.contracts', \App\Http\Controllers\ContractController::class);
+        // Financials
+        Route::get('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'show']);
+        Route::put('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'update']);
+        Route::apiResource('projects.payments', \App\Http\Controllers\Api\V1\ProjectPaymentController::class);
+        Route::apiResource('projects.costs', \App\Http\Controllers\Api\V1\ProjectCostController::class);
     });
 });
 

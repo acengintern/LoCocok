@@ -24,14 +24,14 @@ class ProjectFinancialController extends Controller
     public function show(Project $project)
     {
         $financial = $project->financial()->firstOrCreate(['project_id' => $project->id]);
-        $this->authorize('manage', $financial);
+        $this->authorize('view', $financial);
         return $this->successResponse(new ProjectFinancialResource($financial), 'Financial record retrieved successfully.');
     }
 
     public function update(UpdateProjectFinancialRequest $request, Project $project)
     {
         $financial = $project->financial()->firstOrCreate(['project_id' => $project->id]);
-        $this->authorize('manage', $financial);
+        $this->authorize('update', $financial);
         $financial->update($request->validated());
         return $this->successResponse(new ProjectFinancialResource($financial), 'Financial record updated successfully.');
     }
@@ -59,14 +59,14 @@ class ProjectPaymentController extends Controller
 
     public function index(Project $project)
     {
-        $this->authorize('manage', ProjectPayment::class);
+        $this->authorize('viewAny', ProjectPayment::class);
         $payments = $project->payments;
         return $this->successResponse(ProjectPaymentResource::collection($payments), 'Payments retrieved successfully.');
     }
 
     public function store(StoreProjectPaymentRequest $request, Project $project)
     {
-        $this->authorize('manage', ProjectPayment::class);
+        $this->authorize('create', ProjectPayment::class);
         $payment = $project->payments()->create($request->validated());
         return $this->successResponse(new ProjectPaymentResource($payment), 'Payment created successfully.', 201);
     }
@@ -74,14 +74,14 @@ class ProjectPaymentController extends Controller
     public function show(Project $project, ProjectPayment $payment)
     {
         abort_if($payment->project_id !== $project->id, 404, 'Payment not found for this project.');
-        $this->authorize('manage', $payment);
+        $this->authorize('view', $payment);
         return $this->successResponse(new ProjectPaymentResource($payment), 'Payment retrieved successfully.');
     }
 
     public function update(UpdateProjectPaymentRequest $request, Project $project, ProjectPayment $payment)
     {
         abort_if($payment->project_id !== $project->id, 404, 'Payment not found for this project.');
-        $this->authorize('manage', $payment);
+        $this->authorize('update', $payment);
         $payment->update($request->validated());
         return $this->successResponse(new ProjectPaymentResource($payment), 'Payment updated successfully.');
     }
@@ -89,7 +89,7 @@ class ProjectPaymentController extends Controller
     public function destroy(Project $project, ProjectPayment $payment)
     {
         abort_if($payment->project_id !== $project->id, 404, 'Payment not found for this project.');
-        $this->authorize('manage', $payment);
+        $this->authorize('delete', $payment);
         $payment->delete();
         return $this->successResponse(null, 'Payment deleted successfully.');
     }
@@ -117,14 +117,14 @@ class ProjectCostController extends Controller
 
     public function index(Project $project)
     {
-        $this->authorize('manage', ProjectCost::class);
+        $this->authorize('viewAny', ProjectCost::class);
         $costs = $project->costs;
         return $this->successResponse(ProjectCostResource::collection($costs), 'Costs retrieved successfully.');
     }
 
     public function store(StoreProjectCostRequest $request, Project $project)
     {
-        $this->authorize('manage', ProjectCost::class);
+        $this->authorize('create', ProjectCost::class);
         $cost = $project->costs()->create($request->validated());
         return $this->successResponse(new ProjectCostResource($cost), 'Cost created successfully.', 201);
     }
@@ -132,14 +132,14 @@ class ProjectCostController extends Controller
     public function show(Project $project, ProjectCost $cost)
     {
         abort_if($cost->project_id !== $project->id, 404, 'Cost not found for this project.');
-        $this->authorize('manage', $cost);
+        $this->authorize('view', $cost);
         return $this->successResponse(new ProjectCostResource($cost), 'Cost retrieved successfully.');
     }
 
     public function update(UpdateProjectCostRequest $request, Project $project, ProjectCost $cost)
     {
         abort_if($cost->project_id !== $project->id, 404, 'Cost not found for this project.');
-        $this->authorize('manage', $cost);
+        $this->authorize('update', $cost);
         $cost->update($request->validated());
         return $this->successResponse(new ProjectCostResource($cost), 'Cost updated successfully.');
     }
@@ -147,7 +147,7 @@ class ProjectCostController extends Controller
     public function destroy(Project $project, ProjectCost $cost)
     {
         abort_if($cost->project_id !== $project->id, 404, 'Cost not found for this project.');
-        $this->authorize('manage', $cost);
+        $this->authorize('delete', $cost);
         $cost->delete();
         return $this->successResponse(null, 'Cost deleted successfully.');
     }

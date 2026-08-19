@@ -1,23 +1,58 @@
 <?php
-$policies = [
-    "TeamPolicy",
-    "ProjectTypePolicy",
-    "OutputTypePolicy",
-    "TaskTypePolicy",
-    "FileTypePolicy"
-];
 
-foreach ($policies as $policy) {
-    $file = "app/Policies/" . $policy . ".php";
-    $content = file_get_contents($file);
-    
-    $content = preg_replace('/public function viewAny\(User \$user\): bool\s*{\s*return false;\s*}/', "public function viewAny(User \$user): bool {\n        return \$user->can('view');\n    }", $content);
-    $content = preg_replace('/public function view\(User \$user, ([a-zA-Z0-9_]+) \$[a-zA-Z0-9_]+\): bool\s*{\s*return false;\s*}/', "public function view(User \$user, $1 \$model): bool {\n        return \$user->can('view');\n    }", $content);
-    $content = preg_replace('/public function create\(User \$user\): bool\s*{\s*return false;\s*}/', "public function create(User \$user): bool {\n        return \$user->can('manage');\n    }", $content);
-    $content = preg_replace('/public function update\(User \$user, ([a-zA-Z0-9_]+) \$[a-zA-Z0-9_]+\): bool\s*{\s*return false;\s*}/', "public function update(User \$user, $1 \$model): bool {\n        return \$user->can('manage');\n    }", $content);
-    $content = preg_replace('/public function delete\(User \$user, ([a-zA-Z0-9_]+) \$[a-zA-Z0-9_]+\): bool\s*{\s*return false;\s*}/', "public function delete(User \$user, $1 \$model): bool {\n        return \$user->can('manage');\n    }", $content);
-    $content = preg_replace('/public function restore\(User \$user, ([a-zA-Z0-9_]+) \$[a-zA-Z0-9_]+\): bool\s*{\s*return false;\s*}/', "public function restore(User \$user, $1 \$model): bool {\n        return \$user->can('manage');\n    }", $content);
-    $content = preg_replace('/public function forceDelete\(User \$user, ([a-zA-Z0-9_]+) \$[a-zA-Z0-9_]+\): bool\s*{\s*return false;\s*}/', "public function forceDelete(User \$user, $1 \$model): bool {\n        return \$user->can('manage');\n    }", $content);
-    
-    file_put_contents($file, $content);
+$dir = 'app/Policies/';
+
+$pol1 = <<<'EOD'
+<?php
+
+namespace App\Policies;
+
+use App\Models\ProjectFinancial;
+use App\Models\User;
+
+class ProjectFinancialPolicy
+{
+    public function manage(User $user, ProjectFinancial $projectFinancial = null): bool
+    {
+        return $user->hasPermissionTo('manage');
+    }
 }
+EOD;
+
+$pol2 = <<<'EOD'
+<?php
+
+namespace App\Policies;
+
+use App\Models\ProjectPayment;
+use App\Models\User;
+
+class ProjectPaymentPolicy
+{
+    public function manage(User $user, ProjectPayment $projectPayment = null): bool
+    {
+        return $user->hasPermissionTo('manage');
+    }
+}
+EOD;
+
+$pol3 = <<<'EOD'
+<?php
+
+namespace App\Policies;
+
+use App\Models\ProjectCost;
+use App\Models\User;
+
+class ProjectCostPolicy
+{
+    public function manage(User $user, ProjectCost $projectCost = null): bool
+    {
+        return $user->hasPermissionTo('manage');
+    }
+}
+EOD;
+
+file_put_contents($dir.'ProjectFinancialPolicy.php', $pol1);
+file_put_contents($dir.'ProjectPaymentPolicy.php', $pol2);
+file_put_contents($dir.'ProjectCostPolicy.php', $pol3);

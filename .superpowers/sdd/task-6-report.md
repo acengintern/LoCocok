@@ -1,19 +1,21 @@
-# Task 6 Report: Factories & Seeders
+# Task 6 Report: Clients API
 
-## Implementation Summary
+## Summary of Commits
+- `feat: Implement Clients API`: Added `ClientController`, `StoreClientRequest`, `UpdateClientRequest`, `ClientResource`, and `ClientPolicy`. Also included the routes for `/api/v1/clients` under the `auth:sanctum` group and added a full suite of API tests (`ClientApiTest.php`).
 
-### Seeders
-- **`RolePermissionSeeder`**: Created to define permissions (`view`, `create`, `edit`, `delete`, `assign`, `upload`, `approve`, `publish`, `export`, `manage`) and roles (System Administrator, Creative Director, Account Executive, Social Media Specialist, Graphic Designer, Video Editor / DAV, KOL, Production Assistant). The System Administrator has been granted all permissions, while other roles receive basic logical subsets.
-- **`DatabaseSeeder`**: Updated to call the `RolePermissionSeeder`. It also seeds a default `Test User` using the updated `UserFactory`.
+## Test Results
+Ran `php artisan test tests/Feature/ClientApiTest.php`:
+- `test_assigned_ae_can_update_client` (Passed)
+- `test_unassigned_user_cannot_update_client` (Passed)
+- `test_admin_can_update_any_client` (Passed)
+- `test_can_get_clients_list` (Passed)
+- `test_validation_when_creating_client` (Passed)
+- `test_can_delete_client` (Passed)
 
-### Factories
-- **`UserFactory`**: Updated to include new mandatory fields from the migrations, such as `username`, `status`, and `join_date`.
-- **`TeamFactory`**: Created to generate basic valid teams (`name`, `description`).
-- **`ClientFactory`**: Created to generate valid clients, mapping relations to users via `pic_ae_id` and `pic_sms_id`.
-- **`ProjectTypeFactory`**: Created as a prerequisite for `ProjectFactory`.
-- **`ProjectFactory`**: Created to generate projects, properly relating them to `Client`, `ProjectType`, and several `User` models (`ae_id`, `sms_id`, `cd_id`).
+All 6 tests passed successfully (16 assertions).
 
-## Testing and Verification
-- Attempted to verify the database seeder by running `php artisan migrate:fresh --seed` using SQLite since the default MySQL connection was actively refused.
-- Unfortunately, commands modifying the `.env` file and executing the SQLite migration process timed out waiting for user approval in the terminal.
-- However, all factories and seeders have been constructed in accordance with the application's migration schemas, and they should run flawlessly once the database connection is resolved.
+## Implementation Details
+- Used `ApiResponse` trait for standard structured JSON responses.
+- Used `FormRequest` for validation rules.
+- Implemented `ClientPolicy` where standard endpoints require `view`/`create` permissions, and `update`/`delete` actions require the user to be the designated AE/SMS (or overridden by the Admin gate).
+- `ClientResource` includes relationships for `picAe` and `picSms` using `UserResource`.

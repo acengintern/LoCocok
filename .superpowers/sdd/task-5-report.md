@@ -1,20 +1,19 @@
-### Task 5 Report: Spatie RBAC & Activity Log Configuration
+# Task 5 Report: Users & RBAC
 
-**Summary of Changes:**
-- Added `Spatie\Permission\Traits\HasRoles` trait to the `User` model.
-- Added `Spatie\Activitylog\Traits\LogsActivity` trait to the following models:
-  - `Project`
-  - `Task`
-  - `File`
-  - `ContentPlan`
-  - `Script`
-  - `Brief`
-  - `Contract`
-  - `ProjectFinancial`
-- Implemented `getActivitylogOptions()` in the above models using `LogOptions::defaults()->logAll()->logOnlyDirty()`.
+## Test Results
+- Total Tests: 27
+- Passed: 27
+- Assertions: 72
+- Duration: ~6.6s
 
-**Verification:**
-- Ran `php artisan tinker --execute="echo 'OK';"` to verify that all models compile without syntax errors. The command exited successfully and outputted `OK`.
+All Feature/API tests passed successfully, including the newly added `UserApiTest`.
 
-**Commits:**
-- Created commit `Task 5: Configure Spatie RBAC and Activity Log traits` with modifications to `app/Models/*.php`.
+## Commits
+- `feat: Implement Users & RBAC API` (43b12bd)
+  - Created `UserController` with standard CRUD endpoints (`index`, `store`, `show`, `update`, `destroy`) using `SoftDeletes`.
+  - Added role management endpoints to `UserController` (`getRoles`, `assignRole`, `removeRole`).
+  - Added form validation requests (`StoreUserRequest`, `UpdateUserRequest`, `AssignRoleRequest`), including `username` uniqueness and Enum validation for `UserStatus`.
+  - Updated `UserResource` to conditionally load and serialize `roles`.
+  - Added `manageRoles` method to `UserPolicy` using the `manage` permission, and enforced authorization on all endpoints.
+  - Registered all user and role API endpoints under `/api/v1` in `routes/api.php`.
+  - Created and ran comprehensive test cases in `UserApiTest` verifying CRUD isolation, authorization checks, and role assignment/removal logic.

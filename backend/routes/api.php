@@ -34,6 +34,9 @@ Route::prefix('v1')->group(function () {
         // Projects
         Route::apiResource('projects', \App\Http\Controllers\ProjectController::class);
         Route::apiResource('projects.contracts', \App\Http\Controllers\ContractController::class);
+        // Outputs
+        Route::apiResource('projects.outputs', \App\Http\Controllers\ProjectOutputController::class);
+        
         // Financials
         Route::get('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'show']);
         Route::put('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'update']);

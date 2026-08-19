@@ -42,6 +42,15 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('projects.content-plans', \App\Http\Controllers\Api\V1\ContentPlanController::class)->scoped();
         Route::apiResource('projects.scripts', \App\Http\Controllers\Api\V1\ScriptController::class)->scoped();
         
+        // Tasks
+        Route::get('tasks', [\App\Http\Controllers\Api\V1\TaskController::class, 'indexGlobal']);
+        Route::apiResource('projects.tasks', \App\Http\Controllers\Api\V1\TaskController::class)->scoped();
+        
+        // Task Assignments
+        Route::apiResource('projects.tasks.assignments', \App\Http\Controllers\Api\V1\TaskAssignmentController::class)
+            ->only(['index', 'store', 'destroy'])
+            ->scoped();
+        
         // Financials
         Route::get('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'show']);
         Route::put('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'update']);

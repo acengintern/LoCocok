@@ -33,6 +33,7 @@ Route::prefix('v1')->group(function () {
         
         // Projects
         Route::apiResource('projects', \App\Http\Controllers\ProjectController::class);
+        Route::apiResource('projects.contracts', \App\Http\Controllers\ContractController::class);
     });
 });
 

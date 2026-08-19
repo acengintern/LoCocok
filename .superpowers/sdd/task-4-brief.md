@@ -1,22 +1,33 @@
-﻿### Task 4: Models & Eloquent Relationships
+### Task 4: Master Data API
 
 **Global Constraints:**
-- Database tables must use standard snake_case plural naming.
-- Project hasMany/hasOne Contract (no circular foreign key in projects).
-- Use SoftDeletes trait where specified.
+- API endpoints prefixed with /api/v1/.
+- Standard API response structure using ApiResponse trait.
+- Form Requests for validation.
+- API Resources for response transformation.
+- Master data managed via API with auth.
+- Write Feature/API tests for every implemented module (happy path, validation, authorization).
 
-**Files:**
-- Create: ackend/app/Models/*.php
+**Requirements:**
+1. This module handles CRUD for Team, ProjectType, OutputType, TaskType, FileType.
+2. Create standard Laravel REST controllers:
+   - TeamController
+   - ProjectTypeController
+   - OutputTypeController
+   - TaskTypeController
+   - FileTypeController
+   (Or a generic MasterDataController if you prefer, but separate controllers are often cleaner for resource binding and FormRequests. Let's use separate controllers to keep form requests specific, e.g., StoreTeamRequest, StoreProjectTypeRequest, etc., checking for unique names).
+3. Create generic MasterDataResource or specific resources (e.g. TeamResource). The tables are mostly just id, 
+ame (and code for some like TaskType).
+4. Endpoints in outes/api.php:
+   - GET /master/teams, POST /master/teams, GET /master/teams/{id}, PUT /master/teams/{id}, DELETE /master/teams/{id}
+   - Repeat for project-types, output-types, 	ask-types, ile-types.
+   - Protect all routes with uth:sanctum.
+5. Authorization: Ensure ONLY users with manage permission (or System Administrator role via Gate) can perform POST/PUT/DELETE. GET routes can be accessible to users with iew permission. You can use standard Controller uthorizeResource() or manual $this->authorize('viewAny', Team::class). You will need to create Policies for these models (e.g. TeamPolicy) mirroring this logic.
+6. Write tests in 	ests/Feature/MasterDataApiTest.php:
+   - Admin can list, create, update, and soft-delete a Team.
+   - Normal user (without manage permission) cannot create a Team (403).
+   - Test validation (e.g. unique name requirement).
 
-**Instructions:**
-Read the database architecture spec located at docs/superpowers/specs/2026-08-19-loco-track-backend-design.md.
-
-You must create and implement the Eloquent Models for all entities in the database schema.
-1. Apply $casts for Enums. Example: 'status' => \App\Enums\ProjectStatus::class.
-2. Apply $guarded = []; to all models to allow mass assignment.
-3. Implement Eloquent relationships (hasMany, elongsTo, elongsToMany, morphTo/morphMany). Ensure you follow the spec exactly (e.g., projects has relationships e(), sms(), creativeDirector() pointing to the User model).
-4. Apply the Illuminate\Database\Eloquent\SoftDeletes trait to models exactly where specified in the design doc.
-
-Check that all models exist in ackend/app/Models/ without syntax errors by running php artisan tinker --execute="echo 'OK';" or similar.
-
+Ensure tests pass (php artisan test).
 Commit your changes, then write your report to .superpowers/sdd/task-4-report.md.

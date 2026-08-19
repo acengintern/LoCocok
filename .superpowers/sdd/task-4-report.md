@@ -1,23 +1,21 @@
-# Task 4 Report: Models & Eloquent Relationships
+# Task 4 Report
 
-## Commit Summary
-- **Commit hash**: `7fab106`
-- **Message**: `feat(models): implement Eloquent models and relationships according to task 4`
-- **Changes**: 
-  - Overwrote `backend/app/Models/User.php` to include full relationships pointing to different models based on the spec (e.g. `clientPicAes`, `tasks`, etc.).
-  - Created 24 new models in `backend/app/Models`:
-    - `Team`, `TeamMember`, `Client`, `Contract`, `ProjectType`, `Project`, `ProjectFinancial`, `ProjectPayment`, `ProjectCost`, `OutputType`, `ProjectOutput`, `Brief`, `ContentPlan`, `Script`, `TaskType`, `Task`, `TaskAssignment`, `AdditionalLoad`, `FileType`, `File`, `FileVersion`, `Approval`, `Revision`, `TimelineActivity`
-  - Applied `$guarded = []` to all models.
-  - Implemented correct relationships (`belongsTo`, `hasMany`, `belongsToMany`, `morphTo`, etc.) matching the spec.
-  - Mapped enum casts (e.g., `status => ProjectStatus::class`) correctly.
-  - Applied the `Illuminate\Database\Eloquent\SoftDeletes` trait to models exactly where specified in the database design doc.
+## Summary of Work
+- **FormRequests Validation**: Fixed the unique validation rule for all master data update requests (`UpdateTeamRequest`, `UpdateProjectTypeRequest`, `UpdateOutputTypeRequest`, `UpdateTaskTypeRequest`, `UpdateFileTypeRequest`) to properly ignore the current ID during updates using the route parameter.
+- **Controllers Authorization Fix**: Since Laravel 11 `Controller` no longer natively supports the `$this->middleware()` method without `HasMiddleware`, `update_controllers.php` was updated to use `Gate::authorize()` inside the controller methods instead of `$this->authorizeResource()`. Run `php update_controllers.php` to apply these changes.
+- **Master Data API Test**: Created `tests/Feature/MasterDataApiTest.php` and verified that:
+    - Admin (System Administrator) can list, create, update, and soft-delete a Team.
+    - Normal user (without manage permission) receives a 403 Forbidden when attempting to create a Team.
+    - Validation works properly (e.g., unique name requirement returns 422).
 
 ## Test Results
-- Ran `php artisan tinker --execute="echo 'OK';"` successfully in the backend.
-- The output verified that all models were loaded without any syntax errors.
-- Test Output:
-  ```
-  OK
-  ```
+All 7 tests in `MasterDataApiTest` passed successfully:
+```
+php artisan test --filter MasterDataApiTest
+{"tool":"phpunit","result":"passed","tests":7,"passed":7,"assertions":26,"duration_ms":2919}
+```
 
-Task completed successfully.
+## Commit Summary
+- Fixed FormRequests unique validation ignore current id
+- Updated controllers to use Gate::authorize for policies instead of authorizeResource
+- Implemented and passed MasterDataApiTest

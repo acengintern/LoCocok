@@ -19,6 +19,14 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+
+        // Users
+        Route::apiResource('users', \App\Http\Controllers\UserController::class);
+        
+        // Roles
+        Route::get('/users/{user}/roles', [\App\Http\Controllers\UserController::class, 'getRoles']);
+        Route::post('/users/{user}/roles', [\App\Http\Controllers\UserController::class, 'assignRole']);
+        Route::delete('/users/{user}/roles/{role}', [\App\Http\Controllers\UserController::class, 'removeRole']);
     });
 });
 

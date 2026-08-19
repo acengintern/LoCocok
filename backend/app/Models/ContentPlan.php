@@ -44,4 +44,9 @@ class ContentPlan extends Model
     {
         return $this->hasMany(Script::class);
     }
+
+    public function outputType()
+    {
+        return $this->belongsTo(OutputType::class);
+    }
 }

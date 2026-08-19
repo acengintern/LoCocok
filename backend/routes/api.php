@@ -37,6 +37,11 @@ Route::prefix('v1')->group(function () {
         // Outputs
         Route::apiResource('projects.outputs', \App\Http\Controllers\ProjectOutputController::class);
         
+        // Content Planning
+        Route::apiResource('projects.briefs', \App\Http\Controllers\Api\V1\BriefController::class)->scoped();
+        Route::apiResource('projects.content-plans', \App\Http\Controllers\Api\V1\ContentPlanController::class)->scoped();
+        Route::apiResource('projects.scripts', \App\Http\Controllers\Api\V1\ScriptController::class)->scoped();
+        
         // Financials
         Route::get('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'show']);
         Route::put('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'update']);

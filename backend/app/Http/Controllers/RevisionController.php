@@ -36,7 +36,7 @@ class RevisionController extends Controller
 
         $revision = $model->revisions()->create([
             'description' => $request->validated('revision_notes'),
-            'status' => RevisionStatus::OPEN, // Default status
+            'status' => RevisionStatus::OPEN,
             'requested_by' => Auth::id(),
         ]);
 

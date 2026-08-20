@@ -35,11 +35,10 @@ class ApprovalController extends Controller
 
         $approval = $model->approvals()->create([
             'status' => $request->validated('status'),
-            'comments' => $request->validated('notes'), // Map 'notes' from request to 'comments' in db if that's what's needed. Wait, is it notes or comments?
+            'comments' => $request->validated('notes'),
             'user_id' => Auth::id(),
             'reviewed_at' => now(),
             'approval_type' => \App\Enums\ApprovalType::INTERNAL_QC,
-            // approval_type, client_name etc. could be set here depending on logic, but requirements just say requires status and optional notes.
         ]);
 
         return $this->successResponse(

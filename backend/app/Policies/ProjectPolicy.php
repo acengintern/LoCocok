@@ -14,7 +14,21 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        return $user->hasPermissionTo('view');
+        if (! $user->hasPermissionTo('view')) {
+            return false;
+        }
+
+        if ($user->hasPermissionTo('manage')) {
+            return true;
+        }
+
+        if ($this->canManageOrIsAssigned($user, $project)) {
+            return true;
+        }
+
+        return $project->tasks()->whereHas('assignments', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->exists();
     }
 
     public function create(User $user): bool

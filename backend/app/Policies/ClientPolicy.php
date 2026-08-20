@@ -20,6 +20,9 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
+        if ($user->hasPermissionTo('manage')) {
+            return true;
+        }
         return $user->id === $client->pic_ae_id || $user->id === $client->pic_sms_id;
     }
 
@@ -36,6 +39,9 @@ class ClientPolicy
      */
     public function update(User $user, Client $client): bool
     {
+        if ($user->hasPermissionTo('manage')) {
+            return true;
+        }
         return $user->id === $client->pic_ae_id || $user->id === $client->pic_sms_id;
     }
 
@@ -44,6 +50,9 @@ class ClientPolicy
      */
     public function delete(User $user, Client $client): bool
     {
+        if ($user->hasPermissionTo('manage')) {
+            return true;
+        }
         return $user->id === $client->pic_ae_id || $user->id === $client->pic_sms_id;
     }
 }

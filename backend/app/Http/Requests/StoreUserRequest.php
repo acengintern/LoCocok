@@ -16,8 +16,9 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'username' => 'required|string|max:255|unique:users,username',
+            'username' => 'nullable|string|max:255|unique:users,username',
             'password' => 'required|string|min:8',
+            'role' => 'nullable|string|exists:roles,name',
             'status' => ['nullable', \Illuminate\Validation\Rule::enum(\App\Enums\UserStatus::class)],
         ];
     }

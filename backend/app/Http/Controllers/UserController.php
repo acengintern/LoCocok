@@ -28,9 +28,21 @@ class UserController extends Controller
     {
         Gate::authorize('create', User::class);
         $data = $request->validated();
+        if (empty($data['username'])) {
+            $data['username'] = strtolower(explode('@', $data['email'])[0]);
+        }
         $data['password'] = Hash::make($data['password']);
+        $roleName = $data['role'] ?? null;
+        unset($data['role']);
+
         $user = User::create($data);
-        return $this->successResponse(new UserResource($user), 'User created successfully.', 201);
+        if ($roleName) {
+            $role = Role::where('name', $roleName)->first();
+            if ($role) {
+                $user->syncRoles([$role]);
+            }
+        }
+        return $this->successResponse(new UserResource($user->load('roles')), 'User created successfully.', 201);
     }
 
     public function show(User $user)
@@ -47,8 +59,17 @@ class UserController extends Controller
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
+        $roleName = $data['role'] ?? null;
+        unset($data['role']);
+
         $user->update($data);
-        return $this->successResponse(new UserResource($user), 'User updated successfully.');
+        if ($roleName) {
+            $role = Role::where('name', $roleName)->first();
+            if ($role) {
+                $user->syncRoles([$role]);
+            }
+        }
+        return $this->successResponse(new UserResource($user->load('roles')), 'User updated successfully.');
     }
 
     public function destroy(User $user)
@@ -69,7 +90,7 @@ class UserController extends Controller
     {
         Gate::authorize('manageRoles', User::class);
         $role = Role::where('name', $request->role)->firstOrFail();
-        $user->assignRole($role);
+        $user->syncRoles([$role]);
         return $this->successResponse(null, 'Role assigned successfully.');
     }
 

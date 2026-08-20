@@ -16,8 +16,9 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $this->route('user')->id,
-            'username' => 'sometimes|required|string|max:255|unique:users,username,' . $this->route('user')->id,
+            'username' => 'sometimes|nullable|string|max:255|unique:users,username,' . $this->route('user')->id,
             'password' => 'nullable|string|min:8',
+            'role' => 'nullable|string|exists:roles,name',
             'status' => ['nullable', \Illuminate\Validation\Rule::enum(\App\Enums\UserStatus::class)],
         ];
     }

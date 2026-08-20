@@ -11,10 +11,6 @@ class FilePolicy
 {
     private function canManageOrIsAssigned(User $user, Project $project): bool
     {
-        if ($user->hasPermissionTo('manage')) {
-            return true;
-        }
-
         return in_array($user->id, [
             $project->ae_id,
             $project->sms_id,
@@ -39,12 +35,28 @@ class FilePolicy
 
     public function create(User $user, Project $project): bool
     {
-        return $this->canManageOrIsAssigned($user, $project);
+        if ($this->canManageOrIsAssigned($user, $project)) {
+            return true;
+        }
+
+        return $project->tasks()->whereHas('assignments', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->exists();
     }
 
     public function update(User $user, File $file): bool
     {
-        return $this->canManageOrIsAssigned($user, $file->project);
+        if ($this->canManageOrIsAssigned($user, $file->project)) {
+            return true;
+        }
+
+        if ($file->task_id) {
+            return $file->task()->whereHas('assignments', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->exists();
+        }
+
+        return false;
     }
 
     public function delete(User $user, File $file): bool

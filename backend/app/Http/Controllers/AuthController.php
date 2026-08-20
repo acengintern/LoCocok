@@ -19,9 +19,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            $user = Auth::user()->load('roles');
             
             return $this->successResponse(
-                new UserResource(Auth::user()),
+                new UserResource($user),
                 'Login successful'
             );
         }
@@ -41,8 +42,9 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user()->load('roles');
         return $this->successResponse(
-            new UserResource($request->user()),
+            new UserResource($user),
             'User retrieved successfully'
         );
     }

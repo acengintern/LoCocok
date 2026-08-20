@@ -18,6 +18,10 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('System Administrator') ? true : null;
         });
 
+        Gate::define('view-dashboard', function ($user) {
+            return true;
+        });
+
         Gate::policy(\Illuminate\Notifications\DatabaseNotification::class, \App\Policies\NotificationPolicy::class);
     }
 }

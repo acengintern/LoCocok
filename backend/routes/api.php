@@ -75,6 +75,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/{target_type}/{id}/approvals', [\App\Http\Controllers\ApprovalController::class, 'store']);
         Route::get('/{target_type}/{id}/revisions', [\App\Http\Controllers\RevisionController::class, 'index']);
         Route::post('/{target_type}/{id}/revisions', [\App\Http\Controllers\RevisionController::class, 'store']);
+        
+        // Dashboard
+        Route::get('dashboard/summary', [\App\Http\Controllers\Api\V1\DashboardController::class, 'summary']);
+        Route::get('dashboard/workload', [\App\Http\Controllers\Api\V1\DashboardController::class, 'workload']);
     });
 });
 

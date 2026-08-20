@@ -64,6 +64,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('projects.payments', \App\Http\Controllers\Api\V1\ProjectPaymentController::class);
         Route::apiResource('projects.costs', \App\Http\Controllers\Api\V1\ProjectCostController::class);
 
+        // Notifications
+        Route::get('notifications/unread-count', [\App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
+        Route::post('notifications/mark-all-read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
+        Route::put('notifications/{id}/mark-read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
+        Route::get('notifications', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
+
         // Approvals & Revisions
         Route::get('/{target_type}/{id}/approvals', [\App\Http\Controllers\ApprovalController::class, 'index']);
         Route::post('/{target_type}/{id}/approvals', [\App\Http\Controllers\ApprovalController::class, 'store']);

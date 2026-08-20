@@ -75,6 +75,12 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         Gate::authorize('delete', $user);
+        if (auth()->id() && auth()->id() === $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot delete your own account.',
+            ], 422);
+        }
         $user->delete();
         return $this->successResponse(null, 'User deleted successfully.');
     }

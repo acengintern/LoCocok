@@ -15,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, $ability) {
-            return $user->hasRole('System Administrator') ? true : null;
+            return ($user->hasRole('System Administrator') || $user->hasRole('Super Admin')) ? true : null;
         });
 
         Gate::define('view-dashboard', function ($user) {

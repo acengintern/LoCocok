@@ -75,13 +75,10 @@ class DashboardController extends Controller
         $workload = DB::table('users')
             ->select('users.id', 'users.name')
             ->leftJoin('task_assignments', 'users.id', '=', 'task_assignments.user_id')
-            ->leftJoin('tasks', 'task_assignments.task_id', '=', 'tasks.id')
-            // Exclude non-active tasks. We must be careful about nulls if user has no tasks
-            ->where(function ($q) {
-                $q->whereNotIn('tasks.status', ['DONE', 'CANCELLED', 'PUBLISH', 'HOLD', 'EXPIRED'])
-                  ->orWhereNull('tasks.id');
+            ->leftJoin('tasks', function ($join) {
+                $join->on('task_assignments.task_id', '=', 'tasks.id')
+                     ->whereNotIn('tasks.status', ['DONE', 'CANCELLED', 'PUBLISH', 'HOLD', 'EXPIRED']);
             })
-            // Wait, if we use whereNotIn on tasks.status, it will filter out users with no tasks unless we use orWhereNull
             ->groupBy('users.id', 'users.name')
             ->selectRaw('COUNT(tasks.id) as active_tasks_count')
             ->get();

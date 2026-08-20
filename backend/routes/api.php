@@ -19,6 +19,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/users/me', [AuthController::class, 'me']);
 
         // Users
         Route::apiResource('users', \App\Http\Controllers\UserController::class);

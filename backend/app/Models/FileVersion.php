@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Enums\FileVersionApprovalStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasApprovalsAndRevisions;
 
 class FileVersion extends Model
 {
-    use HasFactory;
+    use HasFactory, HasApprovalsAndRevisions;
 
     protected $guarded = [];
 
@@ -29,3 +30,4 @@ class FileVersion extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 }
+

@@ -5,13 +5,14 @@ namespace App\Models;
 use App\Enums\ScriptStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasApprovalsAndRevisions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 class Script extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity, HasApprovalsAndRevisions;
 
     protected $guarded = [];
 
@@ -44,3 +45,4 @@ class Script extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 }
+

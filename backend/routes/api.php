@@ -63,6 +63,12 @@ Route::prefix('v1')->group(function () {
         Route::put('projects/{project}/financials', [\App\Http\Controllers\Api\V1\ProjectFinancialController::class, 'update']);
         Route::apiResource('projects.payments', \App\Http\Controllers\Api\V1\ProjectPaymentController::class);
         Route::apiResource('projects.costs', \App\Http\Controllers\Api\V1\ProjectCostController::class);
+
+        // Approvals & Revisions
+        Route::get('/{target_type}/{id}/approvals', [\App\Http\Controllers\ApprovalController::class, 'index']);
+        Route::post('/{target_type}/{id}/approvals', [\App\Http\Controllers\ApprovalController::class, 'store']);
+        Route::get('/{target_type}/{id}/revisions', [\App\Http\Controllers\RevisionController::class, 'index']);
+        Route::post('/{target_type}/{id}/revisions', [\App\Http\Controllers\RevisionController::class, 'store']);
     });
 });
 
@@ -73,3 +79,4 @@ Route::prefix('v1/master')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('task-types', App\Http\Controllers\Api\V1\TaskTypeController::class);
     Route::apiResource('file-types', App\Http\Controllers\Api\V1\FileTypeController::class);
 });
+

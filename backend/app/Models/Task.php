@@ -6,13 +6,14 @@ use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasApprovalsAndRevisions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 class Task extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity, HasApprovalsAndRevisions;
 
     protected $guarded = [];
 
@@ -62,3 +63,4 @@ class Task extends Model
         return $this->hasMany(File::class);
     }
 }
+

@@ -25,11 +25,12 @@ class AuthController extends Controller
         if (Auth::attempt([$fieldType => $identifier, 'password' => $password])) {
             $request->session()->regenerate();
             $user = Auth::user()->load('roles');
+            $token = $user->createToken('auth_token')->plainTextToken;
             
-            return $this->successResponse(
-                new UserResource($user),
-                'Login successful'
-            );
+            return $this->successResponse([
+                'user' => new UserResource($user),
+                'token' => $token,
+            ], 'Login successful');
         }
 
         return $this->errorResponse('Invalid credentials', null, 401);

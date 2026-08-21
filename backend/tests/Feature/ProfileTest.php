@@ -138,6 +138,31 @@ class ProfileTest extends TestCase
         $this->assertTrue(Hash::check('initial-set-password-123', $user->fresh()->password));
     }
 
+    public function test_google_user_with_existing_password_can_update_password_without_current_password()
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('legacy-seeded-password'),
+            'google_id' => 'google-oauth-987654',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $payload = [
+            'password' => 'fresh-chosen-password-789',
+            'password_confirmation' => 'fresh-chosen-password-789',
+        ];
+
+        $response = $this->putJson('/api/v1/users/me/password', $payload);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Password updated successfully',
+            ]);
+
+        $this->assertTrue(Hash::check('fresh-chosen-password-789', $user->fresh()->password));
+    }
+
     public function test_user_can_retrieve_workload_stats()
     {
         $user = User::factory()->create();

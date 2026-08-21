@@ -54,7 +54,8 @@ class ProfileController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        if (!empty($user->password)) {
+        // For Google OAuth users, current_password is not required since their identity is verified via Google SSO
+        if (!empty($user->password) && empty($user->google_id)) {
             if (empty($request->current_password) || !Hash::check($request->current_password, $user->password)) {
                 throw ValidationException::withMessages([
                     'current_password' => ['The provided current password does not match your current password.'],

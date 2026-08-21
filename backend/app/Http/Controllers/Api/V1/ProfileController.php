@@ -27,11 +27,14 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:50',
-            'division' => 'nullable|string|max:100',
             'bio' => 'nullable|string|max:1000',
         ]);
 
-        $user->update($validated);
+        $user->update([
+            'name' => $validated['name'],
+            'phone' => $validated['phone'] ?? null,
+            'bio' => $validated['bio'] ?? null,
+        ]);
 
         return $this->successResponse(
             new UserResource($user->load('roles')),

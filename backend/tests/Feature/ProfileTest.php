@@ -52,7 +52,7 @@ class ProfileTest extends TestCase
                     'id' => $user->id,
                     'name' => 'Jane Agency Doe',
                     'phone' => '08123456789',
-                    'division' => 'Creative & Design',
+                    'division' => 'Operations',
                     'bio' => 'Senior Graphic Designer and Art Director.',
                 ],
             ]);
@@ -61,7 +61,7 @@ class ProfileTest extends TestCase
             'id' => $user->id,
             'name' => 'Jane Agency Doe',
             'phone' => '08123456789',
-            'division' => 'Creative & Design',
+            'division' => 'Operations',
             'bio' => 'Senior Graphic Designer and Art Director.',
         ]);
     }

@@ -1,34 +1,38 @@
-# Task 2 Report: Create AuthHeroBanner and Integrate Dynamic Branding into AuthLayout
+# Task 2 Report: Backend Google OAuth Controller, Routes, Security Logic, and Feature Tests
 
-## Overview
-Successfully created `AuthHeroBanner.tsx` and integrated it into `AuthLayout.tsx`, providing dynamic agency branding across all authentication screens (`/signin`, `/signup`, etc.).
+## Summary
+Successfully implemented the backend Google OAuth controller, registered the throttled API routes, added account security/status validation, automatic role assignment to `Staff`, unique username slug generation, Sanctum token generation, activity logging, and 7 comprehensive feature tests.
 
-## Changes Made
-1. **Created `src/components/auth/AuthHeroBanner.tsx`**:
-   - Client component (`"use client"`) consuming `useSettings()` hook.
-   - Dynamic agency name resolution: `settings.agency_name || "LOCO TRACK"`.
-   - Crisp rounded-2xl frosted glass logo container with `loco.png`.
-   - Dynamic agency branding with tagline: *"Platform manajemen kampanye kreatif, approval aset, & pelacakan performa tim agensi Anda."*
-   - Decorative background SVG grid patterns (`GridShape`).
-   - Clean dark/light theme responsive styling matching high-end agency design standards.
+## Changes Implemented
+1. **GoogleAuthController (`backend/app/Http/Controllers/GoogleAuthController.php`)**:
+   - `redirect()`: Redirects to Google OAuth with requested scopes (`openid`, `profile`, `email`) in stateless mode.
+   - `callback()`: 
+     - Handles Google user fetching with try/catch exception resilience, redirecting to frontend `/signin?error=oauth_failed` on error or missing email.
+     - Matches existing users by `google_id` or `email`.
+     - Validates user status, blocking suspended/inactive users with redirect to `/signin?error=account_suspended`.
+     - Links `google_id`, updates `avatar`, and sets `email_verified_at` for existing users.
+     - Generates unique slugified usernames for new users and assigns default `Staff` role via Spatie Permission.
+     - Generates Sanctum token and logs activity via Spatie Activitylog.
+     - Redirects to `${frontendUrl}/auth/callback?token=${token}&status=success`.
 
-2. **Updated `src/app/(full-width-pages)/(auth)/layout.tsx`**:
-   - Replaced duplicated static branding pane with `<AuthHeroBanner />`.
-   - Maintained `ThemeProvider` and theme toggler.
+2. **Routes (`backend/routes/api.php`) & Config (`backend/config/app.php`)**:
+   - Registered `GET /api/v1/auth/google/redirect` (`auth.google.redirect`) with `throttle:10,1`.
+   - Registered `GET /api/v1/auth/google/callback` (`auth.google.callback`) with `throttle:10,1`.
+   - Configured `frontend_url` key in `config/app.php`.
 
-## Verification & Build Results
-- Executed `npm run build` in `free-nextjs-admin-dashboard`.
-- **Turbopack Compilation:** Successfully compiled in 7.6s.
-- **TypeScript Type Check:** 0 type errors.
-- **Static Page Generation:** 53/53 routes prerendered / compiled successfully without warnings or errors.
+3. **Feature Tests (`backend/tests/Feature/GoogleAuthTest.php`)**:
+   - `test_google_redirect_returns_redirect_response`: Asserts 302 redirect with Google OAuth URL.
+   - `test_google_callback_creates_new_user_with_staff_role`: Asserts user creation, `Staff` role assignment, verified email, and token issuance.
+   - `test_google_callback_links_existing_active_user`: Asserts linking Google ID and updating avatar for existing active account.
+   - `test_google_callback_rejects_suspended_user`: Asserts 302 redirect to `error=account_suspended` and no token creation.
+   - `test_google_callback_handles_socialite_exception_gracefully`: Asserts catch block redirect to `error=oauth_failed`.
+   - `test_google_callback_generates_unique_username_when_slug_collides`: Asserts incremented unique username generation.
+   - `test_google_callback_handles_missing_email`: Asserts graceful redirect to `error=oauth_failed`.
 
-## Git Commit
-- Commit: `e7952e5`
-- Message: `feat(auth): integrate dynamic agency brand hero banner in AuthLayout`
-- Files:
-  - `src/components/auth/AuthHeroBanner.tsx` (created)
-  - `src/app/(full-width-pages)/(auth)/layout.tsx` (modified)
+## Test Results
+- `php artisan test --filter GoogleAuthTest`: 7 passed (31 assertions)
+- `php artisan test`: 97 passed (331 assertions)
 
-## Status
-- **Status:** Complete & Verified
-- **Concerns / Blockers:** None
+## Commit Information
+- Commit Hash: `9a3015b`
+- Commit Message: `feat(auth): implement GoogleAuthController with security checks and feature tests`

@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('throttle:10,1')->group(function () {
         Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
         Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+        Route::post('/auth/google/exchange', [GoogleAuthController::class, 'exchange'])->name('auth.google.exchange');
     });
 
     Route::middleware('auth:sanctum')->group(function () {

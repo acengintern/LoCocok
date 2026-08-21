@@ -1,38 +1,31 @@
-# Task 3: Integrate Dynamic Currency Formatter into SummaryCards - Completion Report
+# Task 3 Report: Frontend Sign In Integration and Auth Callback Handler
 
-## Execution Summary
 - **Status:** COMPLETED
-- **Task:** Task 3 - Integrate Dynamic Currency Formatter into SummaryCards
-- **Target Files:**
-  - `free-nextjs-admin-dashboard/src/components/dashboard/SummaryCards.tsx` (modified)
+- **Branch:** `main`
+- **Target App:** `free-nextjs-admin-dashboard`
+- **Commit:** `05029c1` - `feat(auth): integrate Google sign in button and auth callback route in frontend`
 
-## Implementation Details
-1. **SummaryCards Integration:**
-   - Imported `useSettings` from `@/hooks/useSettings`.
-   - Extracted `formatCurrency` from `useSettings()`.
-   - Removed local hardcoded `formatCurrency` function (which previously only formatted `IDR`).
-   - Retained seamless presentation of pipeline revenue formatting across dynamic currencies (`IDR`, `USD`, `SGD`).
+## Summary of Changes
+1. **API Client (`src/lib/api/client.ts`)**:
+   - Added request interceptor logic to retrieve `auth_token` from `localStorage` and set `Authorization: Bearer <token>` on outgoing API requests.
 
-## Verification Evidence
-- **Build Command:** `npm run build` in `free-nextjs-admin-dashboard`
-- **Output:** Clean compilation with 0 errors across all 51 routes.
-```
-▲ Next.js 16.1.6 (Turbopack)
-- Environments: .env.local
+2. **Auth Context (`src/contexts/AuthContext.tsx`)**:
+   - Updated `logout` function to remove `auth_token` from `localStorage` and reset user state to `null`.
 
-  Creating an optimized production build ...
-✓ Compiled successfully in 7.0s
-  Running TypeScript ...
-  Collecting page data using 15 workers ...
-✓ Generating static pages using 15 workers (51/51) in 1140.0ms
-  Finalizing page optimization ...
-```
+3. **Sign In Component & Page (`src/components/auth/SignInForm.tsx`, `src/app/(full-width-pages)/(auth)/signin/page.tsx`)**:
+   - Wired "Sign in with Google" button `onClick` handler to navigate to `${backendUrl}/api/v1/auth/google/redirect`.
+   - Added search parameters parsing for `?error=` (`account_suspended`, `oauth_failed`, etc.) to display user-friendly Alert notifications.
+   - Wrapped `SignInForm` in `Suspense` boundary on `signin/page.tsx` for optimal App Router client navigation.
 
-## Commit Information
-- **Commit:** `6043c86`
-- **Message:** `feat(frontend): integrate dynamic formatCurrency in Dashboard SummaryCards`
-- **Files Modified:**
-  - `src/components/dashboard/SummaryCards.tsx`
+4. **Auth Callback Page (`src/app/(full-width-pages)/(auth)/callback/page.tsx`)**:
+   - Created client callback page wrapped in `Suspense`.
+   - Extracted `token` and `error` parameters from the redirect query string.
+   - Stored `auth_token` in `localStorage`, invoked `refreshUser()` to populate auth context, and redirected to `/dashboard`.
+   - Forwarded any OAuth errors back to `/signin?error=...`.
 
-## Concerns / Notes
-- None. Dynamic currency formatting adapts immediately when settings change or are fetched from the API.
+5. **Next.js Redirects (`next.config.ts`)**:
+   - Configured redirect from `/auth/callback` to `/callback` to handle both backend and direct callback paths seamlessly.
+
+## Verification & Build Results
+- **Frontend Build:** `npm run build` completed with 0 errors across all 54 static/dynamic routes.
+- **Backend Tests:** `php artisan test --filter GoogleAuthTest` passed (7 tests, 31 assertions).

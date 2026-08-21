@@ -1,15 +1,17 @@
-# Task 1: Modernize SignInForm.tsx and signin/page.tsx
+# Task 1: Backend Package Installation, Database Migration, and Services Config
 
 ## Task Details
 **Files:**
-- Modify: `free-nextjs-admin-dashboard/src/components/auth/SignInForm.tsx`
-- Modify: `free-nextjs-admin-dashboard/src/app/(full-width-pages)/(auth)/signin/page.tsx`
+- Modify: `backend/composer.json`
+- Create: `backend/database/migrations/2026_08_21_000000_add_google_id_and_avatar_to_users_table.php`
+- Modify: `backend/config/services.php`
+- Modify: `backend/app/Models/User.php`
 
 **Requirements:**
-1. Remove the "Back to dashboard" top link.
-2. Replace social auth buttons with a single, full-width "Sign in with Google" button with TailAdmin styling.
-3. Keep Username/Email + Password form with toggleable eye icon, "Ingat saya" checkbox, "Lupa password?" link, and full-width "Sign In" button.
-4. Integrate `useSettings()` to show dynamic agency name (`settings.agency_name || "LOCO TRACK"`).
-5. Update `signin/page.tsx` metadata.
-6. Verify with `npm run build` (0 errors).
-7. Commit: `git commit -am "feat(auth): modernize SignInForm with TailAdmin design and single Google auth"`
+1. Install `laravel/socialite` in `backend` via composer: `composer require laravel/socialite`
+2. Create migration `2026_08_21_000000_add_google_id_and_avatar_to_users_table.php` adding `google_id` (nullable, unique), `avatar` (nullable), and making `password` nullable.
+3. Configure `google` entry in `config/services.php`.
+4. Run `php artisan migrate`.
+5. Run existing tests `php artisan test` to ensure 0 regressions.
+6. Commit: `git commit -am "feat(auth): install socialite, add google_id and avatar migration, configure google services"`
+7. Report back.

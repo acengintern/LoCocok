@@ -68,7 +68,7 @@ class GoogleAuthTest extends TestCase
 
         $response->assertStatus(302);
         $location = $response->headers->get('Location');
-        $this->assertStringContainsString('/auth/callback?token=', $location);
+        $this->assertStringContainsString('/auth/callback?code=', $location);
         $this->assertStringContainsString('&status=success', $location);
 
         $user = User::where('email', 'jane.doe@example.com')->first();
@@ -81,6 +81,23 @@ class GoogleAuthTest extends TestCase
         $this->assertNotNull($user->join_date);
         $this->assertTrue($user->hasRole('Staff'));
         $this->assertCount(1, $user->tokens);
+
+        // Test exchanging the code for token
+        preg_match('/code=([a-zA-Z0-9]+)/', $location, $matches);
+        $code = $matches[1];
+
+        $exchangeResponse = $this->postJson('/api/v1/auth/google/exchange', [
+            'code' => $code,
+        ]);
+        $exchangeResponse->assertStatus(200);
+        $exchangeResponse->assertJsonStructure(['success', 'token']);
+        $this->assertTrue($exchangeResponse->json('success'));
+
+        // Replay should fail (one-time use)
+        $replayResponse = $this->postJson('/api/v1/auth/google/exchange', [
+            'code' => $code,
+        ]);
+        $replayResponse->assertStatus(400);
     }
 
     public function test_google_callback_links_existing_active_user(): void
@@ -113,7 +130,7 @@ class GoogleAuthTest extends TestCase
 
         $response->assertStatus(302);
         $location = $response->headers->get('Location');
-        $this->assertStringContainsString('/auth/callback?token=', $location);
+        $this->assertStringContainsString('/auth/callback?code=', $location);
         $this->assertStringContainsString('&status=success', $location);
 
         $existingUser->refresh();

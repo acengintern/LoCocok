@@ -101,6 +101,34 @@ class GoogleAuthController extends Controller
                 ->log('User logged in via Google OAuth');
         }
 
-        return redirect()->away("{$frontendUrl}/auth/callback?token={$token}&status=success");
+        $exchangeCode = Str::random(48);
+        \Illuminate\Support\Facades\Cache::put("oauth_exchange:{$exchangeCode}", $token, now()->addSeconds(60));
+
+        return redirect()->away("{$frontendUrl}/auth/callback?code={$exchangeCode}&status=success");
+    }
+
+    /**
+     * Exchange short-lived one-time code for the actual Bearer token.
+     */
+    public function exchange(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $code = $request->input('code');
+        $token = \Illuminate\Support\Facades\Cache::pull("oauth_exchange:{$code}");
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode autentikasi tidak valid atau telah kedaluwarsa.',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+        ]);
     }
 }

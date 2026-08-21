@@ -60,62 +60,26 @@ class GoogleAuthController extends Controller
                 }
             })->first();
 
-            if ($user) {
-                // If the user was soft-deleted, restore them upon verified Google sign-in
-                if ($user->trashed()) {
-                    $user->restore();
-                }
-
-                $status = $user->status instanceof UserStatus ? $user->status : UserStatus::tryFrom((string) $user->status);
-                if ($status === UserStatus::SUSPENDED) {
-                    return redirect()->away("{$frontendUrl}/signin?error=account_suspended");
-                }
-
-                $user->status = UserStatus::ACTIVE;
-
-                if ($googleId && $user->google_id !== $googleId) {
-                    $user->google_id = $googleId;
-                }
-                if ($googleUser->getAvatar()) {
-                    $user->avatar = $googleUser->getAvatar();
-                }
-                if ($googleUser->getName() && (empty($user->name) || $user->name === 'sdfs')) {
-                    $user->name = $googleUser->getName();
-                }
-                if (!$user->email_verified_at) {
-                    $user->email_verified_at = now();
-                }
-                $user->save();
-
-                // Ensure role is assigned if user has no role
-                if ($user->roles()->count() === 0) {
-                    $role = Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);
-                    $user->assignRole($role);
-                }
-            } else {
-                $handle = explode('@', $email)[0];
-                $baseUsername = Str::slug($handle, '_') ?: 'user';
-                $username = $baseUsername;
-                $counter = 1;
-                while (User::withTrashed()->where('username', $username)->exists()) {
-                    $username = $baseUsername . $counter;
-                    $counter++;
-                }
-
-                $user = User::create([
-                    'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? $username,
-                    'email' => $email,
-                    'username' => $username,
-                    'google_id' => $googleId,
-                    'avatar' => $googleUser->getAvatar(),
-                    'status' => UserStatus::ACTIVE,
-                    'email_verified_at' => now(),
-                    'join_date' => now(),
-                ]);
-
-                $role = Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);
-                $user->assignRole($role);
+            if (!$user || $user->trashed()) {
+                $encodedEmail = urlencode($email);
+                return redirect()->away("{$frontendUrl}/signin?error=account_not_found&email={$encodedEmail}");
             }
+
+            $status = $user->status instanceof UserStatus ? $user->status : UserStatus::tryFrom((string) $user->status);
+            if ($status !== UserStatus::ACTIVE) {
+                return redirect()->away("{$frontendUrl}/signin?error=account_suspended");
+            }
+
+            if ($googleId && $user->google_id !== $googleId) {
+                $user->google_id = $googleId;
+            }
+            if ($googleUser->getAvatar()) {
+                $user->avatar = $googleUser->getAvatar();
+            }
+            if (!$user->email_verified_at) {
+                $user->email_verified_at = now();
+            }
+            $user->save();
 
             $token = $user->createToken('google-auth')->plainTextToken;
 

@@ -64,13 +64,13 @@ class GoogleAuthTest extends TestCase
         $this->assertStringContainsString('accounts.google.com', $response->headers->get('Location'));
     }
 
-    public function test_google_callback_creates_new_user_with_staff_role(): void
+    public function test_google_callback_rejects_unregistered_email(): void
     {
         $googleUser = Mockery::mock(SocialiteUser::class);
         $googleUser->shouldReceive('getId')->andReturn('google-id-12345');
-        $googleUser->shouldReceive('getName')->andReturn('Jane Doe');
-        $googleUser->shouldReceive('getNickname')->andReturn('janedoe');
-        $googleUser->shouldReceive('getEmail')->andReturn('jane.doe@example.com');
+        $googleUser->shouldReceive('getName')->andReturn('Unknown User');
+        $googleUser->shouldReceive('getNickname')->andReturn('unknown');
+        $googleUser->shouldReceive('getEmail')->andReturn('unregistered@example.com');
         $googleUser->shouldReceive('getAvatar')->andReturn('https://lh3.googleusercontent.com/avatar123.jpg');
 
         $provider = Mockery::mock(\Laravel\Socialite\Two\GoogleProvider::class);
@@ -86,39 +86,15 @@ class GoogleAuthTest extends TestCase
 
         $response->assertStatus(302);
         $location = $response->headers->get('Location');
-        $this->assertStringContainsString('/auth/callback?code=', $location);
-        $this->assertStringContainsString('&status=success', $location);
+        $this->assertStringContainsString('/signin?error=account_not_found', $location);
+        $this->assertStringContainsString('email=unregistered%40example.com', $location);
 
-        $user = User::where('email', 'jane.doe@example.com')->first();
-        $this->assertNotNull($user);
-        $this->assertEquals('Jane Doe', $user->name);
-        $this->assertEquals('google-id-12345', $user->google_id);
-        $this->assertEquals('https://lh3.googleusercontent.com/avatar123.jpg', $user->avatar);
-        $this->assertEquals(UserStatus::ACTIVE, $user->status);
-        $this->assertNotNull($user->email_verified_at);
-        $this->assertNotNull($user->join_date);
-        $this->assertTrue($user->hasRole('Staff'));
-        $this->assertCount(1, $user->tokens);
-
-        // Test exchanging the code for token
-        preg_match('/code=([a-zA-Z0-9]+)/', $location, $matches);
-        $code = $matches[1];
-
-        $exchangeResponse = $this->postJson('/api/v1/auth/google/exchange', [
-            'code' => $code,
+        $this->assertDatabaseMissing('users', [
+            'email' => 'unregistered@example.com',
         ]);
-        $exchangeResponse->assertStatus(200);
-        $exchangeResponse->assertJsonStructure(['success', 'token']);
-        $this->assertTrue($exchangeResponse->json('success'));
-
-        // Test invalid/expired code returns 400
-        $invalidResponse = $this->postJson('/api/v1/auth/google/exchange', [
-            'code' => 'invalid-or-expired-code-123',
-        ]);
-        $invalidResponse->assertStatus(400);
     }
 
-    public function test_google_callback_links_existing_active_user(): void
+    public function test_google_callback_links_and_logs_in_existing_active_user(): void
     {
         $existingUser = User::factory()->create([
             'email' => 'john.smith@example.com',
@@ -156,26 +132,43 @@ class GoogleAuthTest extends TestCase
         $this->assertEquals('https://lh3.googleusercontent.com/john_avatar.jpg', $existingUser->avatar);
         $this->assertNotNull($existingUser->email_verified_at);
         $this->assertCount(1, $existingUser->tokens);
+
+        // Test exchanging the code for token
+        preg_match('/code=([a-zA-Z0-9]+)/', $location, $matches);
+        $code = $matches[1];
+
+        $exchangeResponse = $this->postJson('/api/v1/auth/google/exchange', [
+            'code' => $code,
+        ]);
+        $exchangeResponse->assertStatus(200);
+        $exchangeResponse->assertJsonStructure(['success', 'token']);
+        $this->assertTrue($exchangeResponse->json('success'));
+
+        // Test invalid/expired code returns 400
+        $invalidResponse = $this->postJson('/api/v1/auth/google/exchange', [
+            'code' => 'invalid-or-expired-code-123',
+        ]);
+        $invalidResponse->assertStatus(400);
     }
 
-    public function test_google_callback_restores_soft_deleted_user(): void
+    public function test_google_callback_rejects_trashed_user(): void
     {
         $trashedUser = User::factory()->create([
-            'email' => 'restored@example.com',
-            'username' => 'restored_user',
+            'email' => 'trashed@example.com',
+            'username' => 'trashed_user',
             'google_id' => null,
-            'status' => UserStatus::INACTIVE,
+            'status' => UserStatus::ACTIVE,
         ]);
         $trashedUser->delete(); // Soft delete
 
         $this->assertSoftDeleted('users', ['id' => $trashedUser->id]);
 
         $googleUser = Mockery::mock(SocialiteUser::class);
-        $googleUser->shouldReceive('getId')->andReturn('google-id-restored-888');
-        $googleUser->shouldReceive('getName')->andReturn('Restored User');
-        $googleUser->shouldReceive('getNickname')->andReturn('restored_user');
-        $googleUser->shouldReceive('getEmail')->andReturn('restored@example.com');
-        $googleUser->shouldReceive('getAvatar')->andReturn('https://lh3.googleusercontent.com/restored_avatar.jpg');
+        $googleUser->shouldReceive('getId')->andReturn('google-id-trashed-888');
+        $googleUser->shouldReceive('getName')->andReturn('Trashed User');
+        $googleUser->shouldReceive('getNickname')->andReturn('trashed_user');
+        $googleUser->shouldReceive('getEmail')->andReturn('trashed@example.com');
+        $googleUser->shouldReceive('getAvatar')->andReturn(null);
 
         $provider = Mockery::mock(\Laravel\Socialite\Two\GoogleProvider::class);
         $provider->shouldReceive('stateless')->once()->andReturnSelf();
@@ -190,14 +183,7 @@ class GoogleAuthTest extends TestCase
 
         $response->assertStatus(302);
         $location = $response->headers->get('Location');
-        $this->assertStringContainsString('/auth/callback?code=', $location);
-        $this->assertStringContainsString('&status=success', $location);
-
-        $trashedUser->refresh();
-        $this->assertNull($trashedUser->deleted_at);
-        $this->assertEquals(UserStatus::ACTIVE, $trashedUser->status);
-        $this->assertEquals('google-id-restored-888', $trashedUser->google_id);
-        $this->assertTrue($trashedUser->hasRole('Staff'));
+        $this->assertStringContainsString('/signin?error=account_not_found', $location);
     }
 
     public function test_google_callback_rejects_suspended_user(): void
@@ -248,37 +234,6 @@ class GoogleAuthTest extends TestCase
         $response->assertStatus(302);
         $location = $response->headers->get('Location');
         $this->assertStringContainsString('/signin?error=oauth_failed', $location);
-    }
-
-    public function test_google_callback_generates_unique_username_when_slug_collides(): void
-    {
-        User::factory()->create([
-            'username' => 'alice',
-            'email' => 'alice.original@example.com',
-        ]);
-
-        $googleUser = Mockery::mock(SocialiteUser::class);
-        $googleUser->shouldReceive('getId')->andReturn('google-alice-2');
-        $googleUser->shouldReceive('getName')->andReturn('Alice In Wonderland');
-        $googleUser->shouldReceive('getNickname')->andReturn('alice');
-        $googleUser->shouldReceive('getEmail')->andReturn('alice@wonderland.com');
-        $googleUser->shouldReceive('getAvatar')->andReturn(null);
-
-        $provider = Mockery::mock(\Laravel\Socialite\Two\GoogleProvider::class);
-        $provider->shouldReceive('stateless')->once()->andReturnSelf();
-        $provider->shouldReceive('user')->once()->andReturn($googleUser);
-
-        Socialite::shouldReceive('driver')
-            ->with('google')
-            ->once()
-            ->andReturn($provider);
-
-        $response = $this->get('/api/v1/auth/google/callback');
-
-        $response->assertStatus(302);
-        $newUser = User::where('email', 'alice@wonderland.com')->first();
-        $this->assertNotNull($newUser);
-        $this->assertEquals('alice1', $newUser->username);
     }
 
     public function test_google_callback_handles_missing_email(): void

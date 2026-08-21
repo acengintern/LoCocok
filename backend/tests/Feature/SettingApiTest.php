@@ -164,4 +164,35 @@ class SettingApiTest extends TestCase
         $response = $this->actingAs($user)->getJson('/api/v1/settings');
         $response->assertStatus(200)->assertJsonPath('data.agency_name', 'Newly Saved Agency');
     }
+
+    public function test_settings_changes_are_logged_in_activity_log()
+    {
+        $user = User::factory()->create();
+        $role = Role::create(['name' => 'System Administrator']);
+        $user->assignRole($role);
+
+        $this->actingAs($user)->postJson('/api/v1/settings', [
+            'settings' => [
+                'agency_name' => 'Acme Creative Agency',
+            ],
+        ])->assertStatus(200);
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'settings',
+            'causer_id' => $user->id,
+            'description' => "System setting 'agency_name' was created",
+        ]);
+
+        $this->actingAs($user)->postJson('/api/v1/settings', [
+            'settings' => [
+                'agency_name' => 'Updated Creative Agency',
+            ],
+        ])->assertStatus(200);
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'settings',
+            'causer_id' => $user->id,
+            'description' => "System setting 'agency_name' was updated",
+        ]);
+    }
 }

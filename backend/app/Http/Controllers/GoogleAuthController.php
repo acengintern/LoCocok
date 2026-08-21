@@ -125,7 +125,7 @@ class GoogleAuthController extends Controller
         ]);
 
         $code = $request->input('code');
-        $token = \Illuminate\Support\Facades\Cache::pull("oauth_exchange:{$code}");
+        $token = \Illuminate\Support\Facades\Cache::get("oauth_exchange:{$code}");
 
         if (!$token) {
             return response()->json([
@@ -133,6 +133,9 @@ class GoogleAuthController extends Controller
                 'message' => 'Kode autentikasi tidak valid atau telah kedaluwarsa.',
             ], 400);
         }
+
+        // Allow concurrent React StrictMode requests in development while auto-expiring in 10s
+        \Illuminate\Support\Facades\Cache::put("oauth_exchange:{$code}", $token, now()->addSeconds(10));
 
         return response()->json([
             'success' => true,

@@ -111,11 +111,11 @@ class GoogleAuthTest extends TestCase
         $exchangeResponse->assertJsonStructure(['success', 'token']);
         $this->assertTrue($exchangeResponse->json('success'));
 
-        // Replay should fail (one-time use)
-        $replayResponse = $this->postJson('/api/v1/auth/google/exchange', [
-            'code' => $code,
+        // Test invalid/expired code returns 400
+        $invalidResponse = $this->postJson('/api/v1/auth/google/exchange', [
+            'code' => 'invalid-or-expired-code-123',
         ]);
-        $replayResponse->assertStatus(400);
+        $invalidResponse->assertStatus(400);
     }
 
     public function test_google_callback_links_existing_active_user(): void

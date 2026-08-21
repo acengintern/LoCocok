@@ -130,4 +130,38 @@ class UserApiTest extends TestCase
         $response->assertStatus(200);
         $this->assertSoftDeleted('users', ['id' => $targetUser->id]);
     }
+
+    public function test_admin_can_recreate_soft_deleted_user()
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('System Administrator');
+
+        $user = User::factory()->create([
+            'email' => 'recreate@example.com',
+            'username' => 'recreateuser',
+        ]);
+        $user->delete();
+
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+
+        $payload = [
+            'name' => 'Restored User',
+            'email' => 'recreate@example.com',
+            'username' => 'recreateuser',
+            'password' => 'newpassword123',
+            'status' => 'ACTIVE',
+        ];
+
+        $response = $this->actingAs($admin)->postJson('/api/v1/users', $payload);
+
+        $response->assertStatus(201)
+                 ->assertJsonPath('data.name', 'Restored User')
+                 ->assertJsonPath('data.email', 'recreate@example.com');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'recreate@example.com',
+            'name' => 'Restored User',
+            'deleted_at' => null,
+        ]);
+    }
 }

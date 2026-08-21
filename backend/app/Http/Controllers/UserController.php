@@ -35,7 +35,21 @@ class UserController extends Controller
         $roleName = $data['role'] ?? null;
         unset($data['role']);
 
-        $user = User::create($data);
+        $trashedUser = User::onlyTrashed()
+            ->where(function ($q) use ($data) {
+                $q->where('email', $data['email'])
+                  ->orWhere('username', $data['username']);
+            })
+            ->first();
+
+        if ($trashedUser) {
+            $trashedUser->restore();
+            $trashedUser->update($data);
+            $user = $trashedUser;
+        } else {
+            $user = User::create($data);
+        }
+
         if ($roleName) {
             $role = Role::where('name', $roleName)->first();
             if ($role) {

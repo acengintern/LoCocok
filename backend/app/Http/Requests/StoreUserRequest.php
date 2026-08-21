@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\UserStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
 {
@@ -15,11 +17,20 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'username' => 'nullable|string|max:255|unique:users,username',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
+            ],
+            'username' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('users', 'username')->whereNull('deleted_at'),
+            ],
             'password' => 'required|string|min:8',
             'role' => 'nullable|string|exists:roles,name',
-            'status' => ['nullable', \Illuminate\Validation\Rule::enum(\App\Enums\UserStatus::class)],
+            'status' => ['nullable', Rule::enum(UserStatus::class)],
         ];
     }
 }

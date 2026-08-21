@@ -18,7 +18,12 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'username' => $this->username,
+            'avatar' => $this->avatar,
             'status' => $this->status,
+            'email_verified_at' => $this->email_verified_at,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
             'roles' => $this->relationLoaded('roles') ? $this->roles->map(function ($role) {
                 return [
                     'id' => $role->id,

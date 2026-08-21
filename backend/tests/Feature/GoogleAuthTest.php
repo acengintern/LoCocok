@@ -158,6 +158,48 @@ class GoogleAuthTest extends TestCase
         $this->assertCount(1, $existingUser->tokens);
     }
 
+    public function test_google_callback_restores_soft_deleted_user(): void
+    {
+        $trashedUser = User::factory()->create([
+            'email' => 'restored@example.com',
+            'username' => 'restored_user',
+            'google_id' => null,
+            'status' => UserStatus::INACTIVE,
+        ]);
+        $trashedUser->delete(); // Soft delete
+
+        $this->assertSoftDeleted('users', ['id' => $trashedUser->id]);
+
+        $googleUser = Mockery::mock(SocialiteUser::class);
+        $googleUser->shouldReceive('getId')->andReturn('google-id-restored-888');
+        $googleUser->shouldReceive('getName')->andReturn('Restored User');
+        $googleUser->shouldReceive('getNickname')->andReturn('restored_user');
+        $googleUser->shouldReceive('getEmail')->andReturn('restored@example.com');
+        $googleUser->shouldReceive('getAvatar')->andReturn('https://lh3.googleusercontent.com/restored_avatar.jpg');
+
+        $provider = Mockery::mock(\Laravel\Socialite\Two\GoogleProvider::class);
+        $provider->shouldReceive('stateless')->once()->andReturnSelf();
+        $provider->shouldReceive('user')->once()->andReturn($googleUser);
+
+        Socialite::shouldReceive('driver')
+            ->with('google')
+            ->once()
+            ->andReturn($provider);
+
+        $response = $this->get('/api/v1/auth/google/callback');
+
+        $response->assertStatus(302);
+        $location = $response->headers->get('Location');
+        $this->assertStringContainsString('/auth/callback?code=', $location);
+        $this->assertStringContainsString('&status=success', $location);
+
+        $trashedUser->refresh();
+        $this->assertNull($trashedUser->deleted_at);
+        $this->assertEquals(UserStatus::ACTIVE, $trashedUser->status);
+        $this->assertEquals('google-id-restored-888', $trashedUser->google_id);
+        $this->assertTrue($trashedUser->hasRole('Staff'));
+    }
+
     public function test_google_callback_rejects_suspended_user(): void
     {
         $suspendedUser = User::factory()->create([

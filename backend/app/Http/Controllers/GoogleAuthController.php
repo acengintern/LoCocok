@@ -50,69 +50,90 @@ class GoogleAuthController extends Controller
         $googleId = $googleUser->getId();
         $email = $googleUser->getEmail();
 
-        $user = User::where(function ($query) use ($googleId, $email) {
-            if ($googleId) {
-                $query->where('google_id', $googleId);
-            }
-            if ($email) {
-                $query->orWhere('email', $email);
-            }
-        })->first();
+        try {
+            $user = User::withTrashed()->where(function ($query) use ($googleId, $email) {
+                if ($googleId) {
+                    $query->where('google_id', $googleId);
+                }
+                if ($email) {
+                    $query->orWhere('email', $email);
+                }
+            })->first();
 
-        if ($user) {
-            $status = $user->status instanceof UserStatus ? $user->status : UserStatus::tryFrom((string) $user->status);
-            if ($status !== UserStatus::ACTIVE) {
-                return redirect()->away("{$frontendUrl}/signin?error=account_suspended");
+            if ($user) {
+                // If the user was soft-deleted, restore them upon verified Google sign-in
+                if ($user->trashed()) {
+                    $user->restore();
+                }
+
+                $status = $user->status instanceof UserStatus ? $user->status : UserStatus::tryFrom((string) $user->status);
+                if ($status === UserStatus::SUSPENDED) {
+                    return redirect()->away("{$frontendUrl}/signin?error=account_suspended");
+                }
+
+                $user->status = UserStatus::ACTIVE;
+
+                if ($googleId && $user->google_id !== $googleId) {
+                    $user->google_id = $googleId;
+                }
+                if ($googleUser->getAvatar()) {
+                    $user->avatar = $googleUser->getAvatar();
+                }
+                if ($googleUser->getName() && (empty($user->name) || $user->name === 'sdfs')) {
+                    $user->name = $googleUser->getName();
+                }
+                if (!$user->email_verified_at) {
+                    $user->email_verified_at = now();
+                }
+                $user->save();
+
+                // Ensure role is assigned if user has no role
+                if ($user->roles()->count() === 0) {
+                    $role = Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);
+                    $user->assignRole($role);
+                }
+            } else {
+                $handle = explode('@', $email)[0];
+                $baseUsername = Str::slug($handle, '_') ?: 'user';
+                $username = $baseUsername;
+                $counter = 1;
+                while (User::withTrashed()->where('username', $username)->exists()) {
+                    $username = $baseUsername . $counter;
+                    $counter++;
+                }
+
+                $user = User::create([
+                    'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? $username,
+                    'email' => $email,
+                    'username' => $username,
+                    'google_id' => $googleId,
+                    'avatar' => $googleUser->getAvatar(),
+                    'status' => UserStatus::ACTIVE,
+                    'email_verified_at' => now(),
+                    'join_date' => now(),
+                ]);
+
+                $role = Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);
+                $user->assignRole($role);
             }
 
-            if ($googleId && $user->google_id !== $googleId) {
-                $user->google_id = $googleId;
-            }
-            if ($googleUser->getAvatar()) {
-                $user->avatar = $googleUser->getAvatar();
-            }
-            if (!$user->email_verified_at) {
-                $user->email_verified_at = now();
-            }
-            $user->save();
-        } else {
-            $handle = explode('@', $email)[0];
-            $baseUsername = Str::slug($handle, '_') ?: 'user';
-            $username = $baseUsername;
-            $counter = 1;
-            while (User::where('username', $username)->exists()) {
-                $username = $baseUsername . $counter;
-                $counter++;
+            $token = $user->createToken('google-auth')->plainTextToken;
+
+            if (function_exists('activity')) {
+                activity('auth')
+                    ->performedOn($user)
+                    ->causedBy($user)
+                    ->log('User logged in via Google OAuth');
             }
 
-            $user = User::create([
-                'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? $username,
-                'email' => $email,
-                'username' => $username,
-                'google_id' => $googleId,
-                'avatar' => $googleUser->getAvatar(),
-                'status' => UserStatus::ACTIVE,
-                'email_verified_at' => now(),
-                'join_date' => now(),
-            ]);
+            $exchangeCode = Str::random(48);
+            \Illuminate\Support\Facades\Cache::put("oauth_exchange:{$exchangeCode}", $token, now()->addSeconds(60));
 
-            $role = Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);
-            $user->assignRole($role);
+            return redirect()->away("{$frontendUrl}/auth/callback?code={$exchangeCode}&status=success");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Google OAuth callback database error: ' . $e->getMessage());
+            return redirect()->away("{$frontendUrl}/signin?error=oauth_failed");
         }
-
-        $token = $user->createToken('google-auth')->plainTextToken;
-
-        if (function_exists('activity')) {
-            activity('auth')
-                ->performedOn($user)
-                ->causedBy($user)
-                ->log('User logged in via Google OAuth');
-        }
-
-        $exchangeCode = Str::random(48);
-        \Illuminate\Support\Facades\Cache::put("oauth_exchange:{$exchangeCode}", $token, now()->addSeconds(60));
-
-        return redirect()->away("{$frontendUrl}/auth/callback?code={$exchangeCode}&status=success");
     }
 
     /**

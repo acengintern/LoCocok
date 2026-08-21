@@ -16,6 +16,14 @@ class GoogleAuthController extends Controller
      */
     public function redirect()
     {
+        $frontendUrl = rtrim(config('app.frontend_url') ?? env('FRONTEND_URL', 'http://localhost:3000'), '/');
+        $clientId = config('services.google.client_id');
+        $clientSecret = config('services.google.client_secret');
+
+        if (empty($clientId) || empty($clientSecret)) {
+            return redirect()->away("{$frontendUrl}/signin?error=google_not_configured");
+        }
+
         return Socialite::driver('google')
             ->scopes(['openid', 'profile', 'email'])
             ->stateless()

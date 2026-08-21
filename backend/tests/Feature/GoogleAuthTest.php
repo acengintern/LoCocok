@@ -15,10 +15,28 @@ class GoogleAuthTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config([
+            'services.google.client_id' => 'mock_client_id',
+            'services.google.client_secret' => 'mock_client_secret',
+        ]);
+        Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);
+    }
+
     protected function tearDown(): void
     {
         Mockery::close();
         parent::tearDown();
+    }
+
+    public function test_google_redirect_returns_error_if_not_configured(): void
+    {
+        config(['services.google.client_id' => null]);
+        $response = $this->get('/api/v1/auth/google/redirect');
+        $response->assertStatus(302);
+        $this->assertStringContainsString('error=google_not_configured', $response->headers->get('Location'));
     }
 
     public function test_google_redirect_returns_redirect_response(): void

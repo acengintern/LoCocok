@@ -114,5 +114,54 @@ class SettingApiTest extends TestCase
         ]);
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['settings']);
+
+        // Invalid email format for contact_email
+        $response = $this->actingAs($user)->postJson('/api/v1/settings', [
+            'settings' => [
+                'contact_email' => 'invalid-email-format',
+            ],
+        ]);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['settings.contact_email']);
+
+        // Unknown setting key
+        $response = $this->actingAs($user)->postJson('/api/v1/settings', [
+            'settings' => [
+                'unauthorized_key' => 'malicious_value',
+            ],
+        ]);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['settings']);
+    }
+
+    public function test_settings_are_cached_and_invalidated_on_update()
+    {
+        $user = User::factory()->create();
+        $role = Role::create(['name' => 'System Administrator']);
+        $user->assignRole($role);
+
+        Setting::create(['key' => 'agency_name', 'value' => 'Cached Agency']);
+
+        // First fetch primes the cache
+        $response = $this->actingAs($user)->getJson('/api/v1/settings');
+        $response->assertStatus(200)->assertJsonPath('data.agency_name', 'Cached Agency');
+
+        // Directly modify database without going through controller
+        Setting::where('key', 'agency_name')->update(['value' => 'Direct DB Edit']);
+
+        // Next GET should still return cached value
+        $response = $this->actingAs($user)->getJson('/api/v1/settings');
+        $response->assertStatus(200)->assertJsonPath('data.agency_name', 'Cached Agency');
+
+        // Updating via API clears cache
+        $this->actingAs($user)->postJson('/api/v1/settings', [
+            'settings' => [
+                'agency_name' => 'Newly Saved Agency',
+            ],
+        ])->assertStatus(200);
+
+        // Next GET returns fresh updated value
+        $response = $this->actingAs($user)->getJson('/api/v1/settings');
+        $response->assertStatus(200)->assertJsonPath('data.agency_name', 'Newly Saved Agency');
     }
 }

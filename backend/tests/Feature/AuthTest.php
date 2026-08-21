@@ -25,7 +25,7 @@ class AuthTest extends TestCase
         ]);
 
         $response = $this->withHeaders(['Referer' => 'http://localhost:3000'])->postJson('/api/v1/login', [
-            'email' => $user->email,
+            'identifier' => $user->email,
             'password' => 'password123',
         ]);
 
@@ -45,7 +45,7 @@ class AuthTest extends TestCase
         ]);
 
         $response = $this->withHeaders(['Referer' => 'http://localhost:3000'])->postJson('/api/v1/login', [
-            'email' => $user->email,
+            'identifier' => $user->email,
             'password' => 'wrongpassword',
         ]);
 
@@ -76,7 +76,7 @@ class AuthTest extends TestCase
         ]);
         
         $this->withHeaders(['Referer' => 'http://localhost:3000'])->postJson('/api/v1/login', [
-            'email' => $user->email,
+            'identifier' => $user->email,
             'password' => 'password123',
         ]);
         

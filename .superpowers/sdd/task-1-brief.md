@@ -1,21 +1,32 @@
-﻿### Task 1: API architecture / response helpers
+# Task 1: Create SettingsContext, useSettings Hook, and Mount Provider
 
-**Global Constraints:**
-- API endpoints prefixed with /api/v1/.
-- Standard API response structure: { "success": bool, "message": string, "data": object|array, "meta": object }.
-- Form Requests for validation.
-- Write Feature/API tests for every implemented module (happy path, validation).
-
+## Task Details
 **Files:**
-- Create: ackend/app/Traits/ApiResponse.php
-- Modify: ackend/bootstrap/app.php
-- Create: ackend/tests/Feature/ApiArchitectureTest.php
+- Create: `free-nextjs-admin-dashboard/src/contexts/SettingsContext.tsx`
+- Create: `free-nextjs-admin-dashboard/src/hooks/useSettings.ts`
+- Modify: `free-nextjs-admin-dashboard/src/app/layout.tsx`
 
-**Instructions:**
-1. Create ApiResponse trait in pp/Traits/ with methods like successResponse(, , ) and errorResponse(, , ).
-2. Configure ootstrap/app.php to format validation exceptions and general API exceptions consistently into the standard JSON structure { "success": false, "message": "...", "errors": {} }. Use $exceptions->render(function (ValidationException $e, Request $request) { ... }) and similar for NotFoundHttpException, AuthenticationException, AuthorizationException.
-3. Update ackend/routes/api.php to use a 1 group, like Route::prefix('v1')->group(function () { ... })
-4. Write a test in ApiArchitectureTest.php to verify the JSON structure for a missing route (404) and a successful /api/v1/ping response.
+**Interfaces:**
+```typescript
+export interface SystemSettings {
+  agency_name: string;
+  contact_email: string;
+  currency: "IDR" | "USD" | "SGD" | string;
+}
 
-Ensure tests pass (php artisan test).
-Commit your changes, then write your report to .superpowers/sdd/task-1-report.md.
+export interface SettingsContextType {
+  settings: SystemSettings;
+  loading: boolean;
+  refreshSettings: () => Promise<void>;
+  formatCurrency: (amount?: number | null) => string;
+}
+
+export function useSettings(): SettingsContextType;
+```
+
+## Steps
+1. Create `free-nextjs-admin-dashboard/src/contexts/SettingsContext.tsx` with `SettingsProvider`, fetching `GET /settings` on mount via `apiClient`, providing `settings`, `loading`, `refreshSettings`, and `formatCurrency`.
+2. Create `free-nextjs-admin-dashboard/src/hooks/useSettings.ts` exporting `useSettings()`.
+3. Wrap `RootLayout` in `free-nextjs-admin-dashboard/src/app/layout.tsx` with `<SettingsProvider>`.
+4. Test: Run `npm run build` in `free-nextjs-admin-dashboard` to verify clean compilation.
+5. Commit: `git commit -am "feat(frontend): implement SettingsContext, useSettings hook, and RootLayout integration"`

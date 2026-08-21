@@ -55,6 +55,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/users/me', [AuthController::class, 'me']);
+        Route::put('/users/me/profile', [\App\Http\Controllers\Api\V1\ProfileController::class, 'updateProfile']);
+        Route::put('/users/me/password', [\App\Http\Controllers\Api\V1\ProfileController::class, 'updatePassword']);
+        Route::get('/users/me/stats', [\App\Http\Controllers\Api\V1\ProfileController::class, 'stats']);
 
         // Users
         Route::apiResource('users', UserController::class);

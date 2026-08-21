@@ -1,21 +1,18 @@
-# Task 2: Integrate SettingsContext into AppSidebar and SettingsClient
+# Task 2: Create AuthHeroBanner and Integrate Dynamic Branding into AuthLayout
 
 ## Task Details
 **Files:**
-- Modify: `free-nextjs-admin-dashboard/src/layout/AppSidebar.tsx`
-- Modify: `free-nextjs-admin-dashboard/src/app/(admin)/administration/settings/SettingsClient.tsx`
+- Create: `free-nextjs-admin-dashboard/src/components/auth/AuthHeroBanner.tsx`
+- Modify: `free-nextjs-admin-dashboard/src/app/(full-width-pages)/(auth)/layout.tsx`
 
-**Interfaces:**
-- Consumes: `useSettings()` from `@/hooks/useSettings`
-
-## Steps
-1. In `src/layout/AppSidebar.tsx`:
-   - Import `useSettings` from `@/hooks/useSettings`.
-   - Read `settings` from `useSettings()`.
-   - Replace the static text `"LOCO TRACK"` in the brand header with `settings.agency_name || "LOCO TRACK"`.
-2. In `src/app/(admin)/administration/settings/SettingsClient.tsx`:
-   - Import `useSettings` from `@/hooks/useSettings`.
-   - Extract `refreshSettings` from `useSettings()`.
-   - Call `await refreshSettings()` in `handleSave()` after the POST request succeeds.
-3. Test: Run `npm run build` in `free-nextjs-admin-dashboard` to verify clean compilation with 0 errors.
-4. Commit: `git commit -am "feat(frontend): integrate dynamic agency name in AppSidebar and reactive refresh in SettingsClient"`
+**Requirements:**
+1. Create `src/components/auth/AuthHeroBanner.tsx`:
+   - Client component consuming `useSettings()`.
+   - Render right-side panel: `bg-brand-950 dark:bg-white/5` with decorative SVG background grids (`GridShape`).
+   - Centered brand block with `loco.png` in a crisp rounded-2xl container.
+   - Dynamic title: `settings.agency_name || "LOCO TRACK"`.
+   - Tagline: "Platform manajemen kampanye kreatif, approval aset, & pelacakan performa tim agensi Anda."
+2. In `src/app/(full-width-pages)/(auth)/layout.tsx`:
+   - Mount `<AuthHeroBanner />` in the right pane.
+3. Test: Run `npm run build` in `free-nextjs-admin-dashboard` to verify clean compilation with 0 errors across all routes.
+4. Commit: `git commit -am "feat(auth): integrate dynamic agency brand hero banner in AuthLayout"`

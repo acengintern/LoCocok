@@ -1,32 +1,17 @@
-# Task 1: Create SettingsContext, useSettings Hook, and Mount Provider - Completion Report
+# Task 1: Modernize SignInForm.tsx and signin/page.tsx - Implementation Report
 
-## Execution Summary
-- **Status:** COMPLETED
-- **Task:** Task 1 - Create SettingsContext, useSettings Hook, and Mount Provider
-- **Target Files:**
-  - `free-nextjs-admin-dashboard/src/contexts/SettingsContext.tsx` (created)
-  - `free-nextjs-admin-dashboard/src/hooks/useSettings.ts` (created)
-  - `free-nextjs-admin-dashboard/src/app/layout.tsx` (updated)
+## Summary of Changes
+- Updated `free-nextjs-admin-dashboard/src/components/auth/SignInForm.tsx`:
+  - Removed top "Back to dashboard" navigation link.
+  - Replaced social button grid with a single, full-width "Sign in with Google" button styled according to TailAdmin guidelines.
+  - Integrated `useSettings()` hook to dynamically render `agency_name` (`settings?.agency_name || "LOCO TRACK"`).
+  - Maintained complete authentication form with toggleable password visibility icon, "Ingat saya" checkbox, and "Lupa password?" link.
+- Updated `free-nextjs-admin-dashboard/src/app/(full-width-pages)/(auth)/signin/page.tsx`:
+  - Updated metadata title and description to align with LOCO TRACK branding.
 
-## Implementation Details
-1. **`SettingsContext.tsx`**:
-   - Defined `SystemSettings` and `SettingsContextType` interfaces.
-   - Initialized default fallback settings: `{ agency_name: "LOCO TRACK", contact_email: "admin@lococreative.com", currency: "IDR" }`.
-   - Added asynchronous `refreshSettings` fetching from `apiClient.get('/settings')`.
-   - Added `formatCurrency` helper formatting amounts according to `IDR` (id-ID, 0 fraction digits), `USD` (en-US, 2 fraction digits), and `SGD` (en-SG, 2 fraction digits).
-2. **`useSettings.ts`**:
-   - Custom hook exposing `SettingsContext` with safety check for usage within `SettingsProvider`.
-3. **`layout.tsx`**:
-   - Mounted `SettingsProvider` inside `RootLayout` hierarchy wrapping child components.
+## Verification & Build Results
+- Executed `npm run build` with clean Turbopack compilation and TypeScript verification:
+  - 0 errors, 53/53 static/dynamic routes successfully generated.
 
-## Verification Evidence
-- Build command: `npm run build` in `free-nextjs-admin-dashboard`
-- Result: Clean production build with Turbopack, 0 TypeScript errors, 51/51 static/dynamic pages compiled successfully.
-
-## Commit Information
-- **Commit:** `ac71f0f`
-- **Message:** `feat(frontend): implement SettingsContext, useSettings hook, and RootLayout integration`
-- **Repo:** `free-nextjs-admin-dashboard`
-
-## Concerns / Notes
-- None. Ready for Task 2 (integrating `SettingsContext` into `AppSidebar` and `SettingsClient`).
+## Commits
+- `5f400a1`: `feat(auth): modernize SignInForm with TailAdmin design and single Google auth`

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\FileTypeController;
 use App\Http\Controllers\Api\V1\FileVersionController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OutputTypeController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectCostController;
 use App\Http\Controllers\Api\V1\ProjectFinancialController;
 use App\Http\Controllers\Api\V1\ProjectPaymentController;
@@ -55,9 +56,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/users/me', [AuthController::class, 'me']);
-        Route::put('/users/me/profile', [\App\Http\Controllers\Api\V1\ProfileController::class, 'updateProfile']);
-        Route::put('/users/me/password', [\App\Http\Controllers\Api\V1\ProfileController::class, 'updatePassword']);
-        Route::get('/users/me/stats', [\App\Http\Controllers\Api\V1\ProfileController::class, 'stats']);
+        Route::put('/users/me/profile', [ProfileController::class, 'updateProfile']);
+        Route::put('/users/me/password', [ProfileController::class, 'updatePassword']);
+        Route::get('/users/me/stats', [ProfileController::class, 'stats']);
 
         // Users
         Route::apiResource('users', UserController::class);

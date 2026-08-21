@@ -22,7 +22,7 @@ class SettingController extends Controller
     public function index(): JsonResponse
     {
         $settings = Cache::rememberForever('system_settings', function () {
-            return Setting::all()->pluck('value', 'key');
+            return Setting::all()->pluck('value', 'key')->toArray();
         });
 
         return $this->successResponse($settings, 'Settings retrieved successfully');

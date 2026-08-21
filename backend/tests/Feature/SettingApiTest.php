@@ -86,10 +86,13 @@ class SettingApiTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_unauthenticated_user_cannot_access_settings()
+    public function test_unauthenticated_user_can_read_but_cannot_update_settings()
     {
+        Setting::create(['key' => 'agency_name', 'value' => 'Public Agency Name']);
+
         $response = $this->getJson('/api/v1/settings');
-        $response->assertStatus(401);
+        $response->assertStatus(200)
+            ->assertJsonPath('data.agency_name', 'Public Agency Name');
 
         $response = $this->postJson('/api/v1/settings', [
             'settings' => ['agency_name' => 'Hacked'],

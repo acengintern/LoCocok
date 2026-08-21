@@ -16,8 +16,13 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->validated();
+        
+        $identifier = $credentials['identifier'];
+        $password = $credentials['password'];
 
-        if (Auth::attempt($credentials)) {
+        $fieldType = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        if (Auth::attempt([$fieldType => $identifier, 'password' => $password])) {
             $request->session()->regenerate();
             $user = Auth::user()->load('roles');
             

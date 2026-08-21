@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
 use App\Models\Project;
+use App\Models\Client;
 use App\Models\Task;
 use App\Models\ContentPlan;
 use App\Models\Approval;
@@ -18,8 +19,6 @@ class DashboardController extends Controller
 
     public function summary(Request $request)
     {
-        // For Laravel 11, we can use Gate::authorize, or if not defined just return data.
-        // It's requested to "Enforce Laravel Policies on every endpoint."
         Gate::authorize('view-dashboard');
 
         $user = $request->user();
@@ -29,14 +28,37 @@ class DashboardController extends Controller
         if ($isAdminOrManager) {
             $totalProjects = Project::count();
             $activeProjects = Project::whereNotIn('status', ['DONE', 'CANCELLED', 'HOLD', 'EXPIRED'])->count();
+            $completedProjects = Project::where('status', 'DONE')->count();
+            $totalClients = Client::count();
             $revenue = DB::table('project_financials')->sum('nett_project_revenue');
             $pendingApprovals = Approval::whereNull('reviewed_at')->count();
+            
+            // Status distribution
+            $statusCounts = Project::select('status', DB::raw('count(*) as count'))
+                ->groupBy('status')
+                ->pluck('count', 'status')
+                ->toArray();
+
+            // Recent 6 projects
+            $recentProjects = Project::with([
+                'client:id,name',
+                'projectType:id,name',
+                'ae:id,name',
+                'sms:id,name'
+            ])
+            ->latest()
+            ->take(6)
+            ->get();
             
             return $this->successResponse([
                 'total_projects' => $totalProjects,
                 'active_projects' => $activeProjects,
+                'completed_projects' => $completedProjects,
+                'total_clients' => $totalClients,
                 'revenue' => (float) $revenue,
-                'pending_approvals' => $pendingApprovals
+                'pending_approvals' => $pendingApprovals,
+                'status_distribution' => $statusCounts,
+                'recent_projects' => $recentProjects
             ]);
         } else {
             // For an AE/SMS/Design/Video (Normal user)

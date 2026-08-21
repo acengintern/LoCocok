@@ -42,6 +42,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/settings', [SettingController::class, 'index']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -119,7 +120,6 @@ Route::prefix('v1')->group(function () {
         Route::get('activity-logs', [ActivityLogController::class, 'index']);
 
         // Settings
-        Route::get('settings', [SettingController::class, 'index']);
         Route::post('settings', [SettingController::class, 'store'])->middleware('role:System Administrator');
     });
 });

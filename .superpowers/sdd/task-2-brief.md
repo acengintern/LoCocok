@@ -1,37 +1,42 @@
-# Task 2: Backend Google OAuth Controller, Routes, Security Logic, and Feature Tests
+# Task 2: Frontend Profile Page Components Revitalization
 
-## Task Details
-**Files:**
-- Create: `backend/app/Http/Controllers/GoogleAuthController.php`
-- Modify: `backend/routes/api.php`
-- Create: `backend/tests/Feature/GoogleAuthTest.php`
+## Context & Purpose
+Revitalize the Next.js `/profile` page and components to display authentic agency employee profile details, Google OAuth connection status, password management, and workload statistics.
+Work in: `D:/01-projek/LocoCok/web-track-nextjs/free-nextjs-admin-dashboard`
 
-**Requirements:**
-1. Implement `GoogleAuthController.php`:
-   - `redirect()`: Return `Socialite::driver('google')->scopes(['openid', 'profile', 'email'])->stateless()->redirect();`.
-   - `callback(Request $request)`:
-     - Wrap Google user fetch in `try...catch`, redirecting to `${frontendUrl}/signin?error=oauth_failed` on failure.
-     - Check if user exists by `email` or `google_id`.
-     - If user exists:
-       - If `user->status !== UserStatus::ACTIVE`: redirect to `${frontendUrl}/signin?error=account_suspended`.
-       - Link `google_id`, `avatar`, and mark `email_verified_at` if needed.
-     - If user does not exist:
-       - Generate unique slugified `username` from email handle.
-       - Create new `User` with `status = UserStatus::ACTIVE`, `email_verified_at = now()`, and `join_date = now()`.
-       - Assign default role **`Staff`** using Spatie Permission.
-     - Generate Sanctum token: `$token = $user->createToken('google-auth')->plainTextToken;`.
-     - Log activity via Spatie ActivityLog if available.
-     - Return redirect to `${frontendUrl}/auth/callback?token={$token}&status=success`.
-2. Register routes in `backend/routes/api.php`:
-   - `GET /api/v1/auth/google/redirect`
-   - `GET /api/v1/auth/google/callback`
-   - Wrap with `throttle:10,1` middleware.
-3. Write comprehensive feature tests in `backend/tests/Feature/GoogleAuthTest.php`:
-   - `test_google_redirect_returns_redirect_response`
-   - `test_google_callback_creates_new_user_with_staff_role`
-   - `test_google_callback_links_existing_active_user`
-   - `test_google_callback_rejects_suspended_user`
-   - `test_google_callback_handles_socialite_exception_gracefully`
-4. Run: `php artisan test --filter GoogleAuthTest` and `php artisan test` (all 94+ tests passing).
-5. Commit: `git commit -am "feat(auth): implement GoogleAuthController with security checks and feature tests"`
-6. Report back.
+## Requirements
+1. **User Types**: Update `src/types/api.ts` to ensure `User` interface includes `phone?: string | null; bio?: string | null; division?: string | null;`.
+2. **UserMetaCard.tsx**:
+   - Clean TailAdmin card layout with avatar (Google or default fallback).
+   - Display real user name, username (`@username`), roles badge (e.g. `System Administrator`), status badge (`ACTIVE`), and join date.
+   - Display Google OAuth verification badge if `user.google_id` or `user.email_verified_at` exists.
+   - Quick action button to trigger edit modal or scroll to edit.
+3. **UserInfoCard.tsx**:
+   - Displays real user agency fields: Full Name, Username, Email (Google Linked), Phone / WhatsApp, Division, Bio.
+   - Modal form for editing details (Name, Phone, Division, Bio).
+   - On submit, call `PUT /api/v1/users/me/profile` via `apiClient`, update context via `refreshUser()`, show success toast, and close modal.
+4. **UserSecurityCard.tsx**:
+   - Create `src/components/user-profile/UserSecurityCard.tsx`.
+   - Section 1: Google OAuth Status (Shows connected Google email & ID with green verified badge).
+   - Section 2: Change Password form (Current Password, New Password, Confirm Password).
+   - Calls `PUT /api/v1/users/me/password` with loading state and error handling / toast notification.
+5. **UserStatsCard.tsx**:
+   - Create `src/components/user-profile/UserStatsCard.tsx`.
+   - Fetches `GET /api/v1/users/me/stats` on mount.
+   - Displays 4 metric tiles:
+     - Active Projects (Total assigned/created projects)
+     - Assigned Tasks (Total workload tasks)
+     - Completed Tasks (Finished tasks count)
+     - Completion Rate (% progress bar)
+6. **Profile Page**:
+   - Update `src/app/(admin)/(others-pages)/profile/page.tsx` to mount:
+     `<UserMetaCard />`
+     `<UserStatsCard />`
+     `<UserInfoCard />`
+     `<UserSecurityCard />`
+   - Delete obsolete `src/components/user-profile/UserAddressCard.tsx`.
+7. **Verification**:
+   - Run `npm run build` to verify clean compilation with 0 TypeScript/build errors across all 54 routes.
+8. **Git Commit**:
+   - Commit all changes in `free-nextjs-admin-dashboard`.
+   - Write full report to: `D:/01-projek/LocoCok/web-track-nextjs/.superpowers/sdd/task-2-report.md`.

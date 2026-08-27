@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
+use Laravel\Sanctum\PersonalAccessToken;
+
 class AuthController extends Controller
 {
     use ApiResponse;
@@ -38,6 +40,11 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        $token = $request->user()?->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

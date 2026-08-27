@@ -48,6 +48,7 @@ Thumbs.db
 .superpowers/
 docs/
 *.docx
+!Analisis_Kebutuhan_Sistem_LOCO_TRACK.docx
 *.xlsx
 docx_content.txt
 CRUD_AUDIT_REPORT.md

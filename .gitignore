@@ -43,3 +43,13 @@ Thumbs.db
 .idea/
 .vscode/
 *.pem
+
+# Non-project documentation & audit artifacts
+.superpowers/
+docs/
+*.docx
+*.xlsx
+docx_content.txt
+CRUD_AUDIT_REPORT.md
+fase*.md
+tmp-*.md

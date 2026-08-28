@@ -24,13 +24,6 @@ class DatabaseSeeder extends Seeder
         // Seed Default README Test Accounts
         $defaultAccounts = [
             [
-                'name' => 'mamad',
-                'email' => 'begopeoplee@gmail.com',
-                'username' => 'mamad',
-                'password' => 'begomad',
-                'role' => 'System Administrator',
-            ],
-            [
                 'name' => 'System Administrator',
                 'email' => 'admin@locotrack.com',
                 'username' => 'admin',
@@ -61,12 +54,13 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($defaultAccounts as $account) {
-            $user = User::firstOrCreate(
+            $user = User::updateOrCreate(
                 ['email' => $account['email']],
                 [
                     'name' => $account['name'],
                     'username' => $account['username'],
                     'password' => Hash::make($account['password'] ?? 'password'),
+                    'avatar' => $account['avatar'] ?? null,
                     'email_verified_at' => now(),
                 ]
             );

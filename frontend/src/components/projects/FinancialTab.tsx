@@ -29,10 +29,16 @@ export default function FinancialTab({ projectId }: FinancialTabProps) {
         ]);
 
         setFinancial(finRes.data?.data || finRes.data || null);
-        setPayments(payRes.data?.data || payRes.data || []);
-        setCosts(costRes.data?.data || costRes.data || []);
+
+        const rawPay = payRes?.data?.data;
+        setPayments(Array.isArray(rawPay?.data) ? rawPay.data : Array.isArray(rawPay) ? rawPay : Array.isArray(payRes?.data) ? payRes.data : []);
+
+        const rawCost = costRes?.data?.data;
+        setCosts(Array.isArray(rawCost?.data) ? rawCost.data : Array.isArray(rawCost) ? rawCost : Array.isArray(costRes?.data) ? costRes.data : []);
       } catch (error) {
         console.error("Failed to fetch financial data", error);
+        setPayments([]);
+        setCosts([]);
       } finally {
         setLoading(false);
       }
@@ -107,7 +113,7 @@ export default function FinancialTab({ projectId }: FinancialTabProps) {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Payments</h3>
               <Button>Add Payment</Button>
             </div>
-            {payments.length === 0 ? (
+            {(!Array.isArray(payments) || payments.length === 0) ? (
               <div className="text-center text-gray-500 py-4">No payments found.</div>
             ) : (
               <div className="overflow-x-auto">
@@ -120,7 +126,7 @@ export default function FinancialTab({ projectId }: FinancialTabProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payments.map((payment) => (
+                    {(Array.isArray(payments) ? payments : []).map((payment) => (
                       <TableRow key={payment.id} className="border-b border-gray-200 dark:border-white/[0.05]">
                         <TableCell>${Number(payment.amount).toLocaleString()}</TableCell>
                         <TableCell>{payment.payment_date || "-"}</TableCell>
@@ -144,7 +150,7 @@ export default function FinancialTab({ projectId }: FinancialTabProps) {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Costs</h3>
               <Button>Add Cost</Button>
             </div>
-            {costs.length === 0 ? (
+            {(!Array.isArray(costs) || costs.length === 0) ? (
               <div className="text-center text-gray-500 py-4">No costs found.</div>
             ) : (
               <div className="overflow-x-auto">
@@ -157,7 +163,7 @@ export default function FinancialTab({ projectId }: FinancialTabProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {costs.map((cost) => (
+                    {(Array.isArray(costs) ? costs : []).map((cost) => (
                       <TableRow key={cost.id} className="border-b border-gray-200 dark:border-white/[0.05]">
                         <TableCell>{cost.description || "-"}</TableCell>
                         <TableCell>${Number(cost.amount).toLocaleString()}</TableCell>

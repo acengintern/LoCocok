@@ -42,7 +42,6 @@ const mainNavItems: NavItem[] = [
   {
     icon: <FolderIcon />,
     name: "Projects",
-    path: "/projects",
     subItems: [
       { name: "All Projects", path: "/projects" },
       { name: "My Projects", path: "/projects/my" },
@@ -57,7 +56,6 @@ const mainNavItems: NavItem[] = [
   {
     icon: <TaskIcon />,
     name: "Production",
-    path: "/production/tasks",
     subItems: [
       { name: "All Tasks", path: "/production/tasks" },
       { name: "Daily Workload", path: "/production/workload" },
@@ -69,7 +67,6 @@ const mainNavItems: NavItem[] = [
   {
     icon: <DocsIcon />,
     name: "Content Planning",
-    path: "/content/brief",
     subItems: [
       { name: "Briefs", path: "/content/brief" },
       { name: "Content Plans", path: "/content/content-plan" },
@@ -90,7 +87,6 @@ const mainNavItems: NavItem[] = [
   {
     icon: <CalenderIcon />,
     name: "Timeline & Calendar",
-    path: "/projects/calendar",
     subItems: [
       { name: "Project Calendar", path: "/projects/calendar" },
       { name: "Production Timeline", path: "/timeline" },
@@ -166,9 +162,7 @@ const AppSidebar: React.FC = () => {
   }, [hasRole]);
 
   // Track expanded menu state by menu name
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    "Master Data": true,
-  });
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   const isActive = useCallback(
     (path?: string) => {
@@ -184,8 +178,7 @@ const AppSidebar: React.FC = () => {
     allNav.forEach((nav) => {
       if (nav.subItems) {
         const isChildActive = nav.subItems.some((s) => s.path === pathname);
-        const isParentActive = nav.path === pathname;
-        if (isChildActive || isParentActive) {
+        if (isChildActive) {
           setExpandedMenus((prev) => ({
             ...prev,
             [nav.name]: true,
@@ -208,35 +201,26 @@ const AppSidebar: React.FC = () => {
         const isMenuOpen = !!expandedMenus[nav.name];
         const isChildActive = nav.subItems?.some((s) => isActive(s.path));
         const isParentActive = nav.path ? isActive(nav.path) : false;
-        const isItemActive = isParentActive || isChildActive;
+        const isItemActive = isChildActive || (!nav.subItems && isParentActive);
 
         return (
           <li key={nav.name}>
             {nav.subItems ? (
               <div className="flex flex-col">
-                <div
-                  className={`menu-item group w-full flex items-center justify-between ${
+                <button
+                  type="button"
+                  onClick={() => toggleSubmenu(nav.name)}
+                  className={`menu-item group w-full flex items-center justify-between text-left cursor-pointer transition-colors ${
                     isItemActive ? "menu-item-active" : "menu-item-inactive"
                   } ${
                     !isExpanded && !isHovered
                       ? "lg:justify-center"
                       : "lg:justify-start"
                   }`}
+                  aria-expanded={isMenuOpen}
+                  aria-label={`Toggle ${nav.name} submenu`}
                 >
-                  {/* Clickable Title / Icon */}
-                  <Link
-                    href={nav.path || nav.subItems[0]?.path || "#"}
-                    onClick={() => {
-                      if (!nav.subItems && isMobileOpen) {
-                        toggleMobileSidebar();
-                      }
-                      setExpandedMenus((prev) => ({
-                        ...prev,
-                        [nav.name]: true,
-                      }));
-                    }}
-                    className="flex items-center gap-3 flex-1 min-w-0"
-                  >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <span
                       className={`${
                         isItemActive
@@ -249,28 +233,19 @@ const AppSidebar: React.FC = () => {
                     {(isExpanded || isHovered || isMobileOpen) && (
                       <span className="menu-item-text truncate">{nav.name}</span>
                     )}
-                  </Link>
+                  </div>
 
-                  {/* Toggle Dropdown Chevron Button */}
+                  {/* Toggle Dropdown Chevron */}
                   {(isExpanded || isHovered || isMobileOpen) && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleSubmenu(nav.name);
-                      }}
-                      className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
-                      aria-label={`Toggle ${nav.name} submenu`}
+                    <span
+                      className={`menu-item-arrow ${
+                        isMenuOpen ? "menu-item-arrow-active" : "menu-item-arrow-inactive"
+                      }`}
                     >
-                      <ChevronDownIcon
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          isMenuOpen ? "rotate-180 text-brand-500" : ""
-                        }`}
-                      />
-                    </button>
+                      <ChevronDownIcon className="w-4 h-4 transition-transform duration-200" />
+                    </span>
                   )}
-                </div>
+                </button>
 
                 {/* Submenu Dropdown List */}
                 {(isExpanded || isHovered || isMobileOpen) && (
@@ -316,6 +291,10 @@ const AppSidebar: React.FC = () => {
                   }}
                   className={`menu-item group ${
                     isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  } ${
+                    !isExpanded && !isHovered
+                      ? "lg:justify-center"
+                      : "lg:justify-start"
                   }`}
                 >
                   <span
@@ -371,13 +350,13 @@ const AppSidebar: React.FC = () => {
         >
           {isExpanded || isHovered || isMobileOpen ? (
             <div className="flex items-center gap-3.5">
-              <div className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 p-1 border border-gray-200/60 dark:border-gray-700/50 shadow-sm shrink-0">
+              <div className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 p-1 border border-gray-200/60 dark:border-gray-700/50 shadow-sm shrink-0 overflow-hidden">
                 <Image
-                  src="/images/logo/loco.png"
+                  src="/images/logo/logo.jpeg"
                   alt={settings.agency_name || "LOCO TRACK"}
                   width={40}
                   height={40}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain rounded-lg"
                   priority
                 />
               </div>
@@ -391,13 +370,13 @@ const AppSidebar: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 p-1 border border-gray-200/60 dark:border-gray-700/50 shadow-sm">
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 p-1 border border-gray-200/60 dark:border-gray-700/50 shadow-sm overflow-hidden">
               <Image
-                src="/images/logo/loco.png"
+                src="/images/logo/logo.jpeg"
                 alt="Logo"
                 width={40}
                 height={40}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain rounded-lg"
                 priority
               />
             </div>

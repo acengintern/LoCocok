@@ -50,12 +50,12 @@ export default function AuthHeroBanner() {
         <GridShape />
         <div className="flex flex-col items-center max-w-lg text-center">
           <Link href="/" className="flex flex-col items-center group">
-            <div className="relative flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-3 mb-5 transition-transform duration-300 group-hover:scale-105">
+            <div className="relative flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-2 mb-5 transition-transform duration-300 group-hover:scale-105 overflow-hidden">
               <Image
                 width={64}
                 height={64}
-                className="w-full h-full object-contain"
-                src="/images/logo/loco.png"
+                className="w-full h-full object-contain rounded-xl"
+                src="/images/logo/logo.jpeg"
                 alt={agencyName}
                 priority
               />

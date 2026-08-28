@@ -43,9 +43,12 @@ export default function OutputsTab({ projectId }: OutputsTabProps) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/projects/${projectId}/outputs?include=outputType`);
-      setOutputs(res.data?.data || res.data || []);
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setOutputs(list);
     } catch (error) {
       console.error("Failed to fetch outputs", error);
+      setOutputs([]);
     } finally {
       setLoading(false);
     }
@@ -53,10 +56,13 @@ export default function OutputsTab({ projectId }: OutputsTabProps) {
 
   const fetchOutputTypes = async () => {
     try {
-      const res = await apiClient.get('/output-types');
-      setOutputTypes(res.data?.data || res.data || []);
+      const res = await apiClient.get('/master/output-types');
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setOutputTypes(list);
     } catch (error) {
       console.error("Failed to fetch output types", error);
+      setOutputTypes([]);
     }
   };
 
@@ -139,7 +145,7 @@ export default function OutputsTab({ projectId }: OutputsTabProps) {
         <div className="flex justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
         </div>
-      ) : outputs.length === 0 ? (
+      ) : (!Array.isArray(outputs) || outputs.length === 0) ? (
         <div className="text-center text-gray-500 py-4">No outputs found.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -154,7 +160,7 @@ export default function OutputsTab({ projectId }: OutputsTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {outputs.map((output) => {
+              {(Array.isArray(outputs) ? outputs : []).map((output) => {
                 const progress = calculateProgress(output.actual_quantity, output.target_quantity);
                 return (
                   <TableRow key={output.id} className="border-b border-gray-200 dark:border-white/[0.05]">

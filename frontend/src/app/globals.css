@@ -189,8 +189,17 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+  html,
   body {
     @apply relative font-normal font-outfit z-1 bg-gray-50;
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 }
 

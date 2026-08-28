@@ -33,9 +33,12 @@ function BriefsList({ projectId }: { projectId: string }) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/projects/${projectId}/briefs`);
-      setItems(res.data?.data || res.data || []);
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setItems(list);
     } catch (error) {
       console.error("Failed to fetch", error);
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -102,7 +105,7 @@ function BriefsList({ projectId }: { projectId: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {(Array.isArray(items) ? items : []).map((item) => (
                 <TableRow key={item.id} className="border-b border-gray-200 dark:border-white/[0.05]">
                   <TableCell>{item.title || item.name || "-"}</TableCell>
                   <TableCell>
@@ -168,12 +171,19 @@ function ContentPlansList({ projectId }: { projectId: string }) {
       setLoading(true);
       const [resItems, resTypes] = await Promise.all([
         apiClient.get(`/projects/${projectId}/content-plans?include=outputType`),
-        apiClient.get('/output-types')
+        apiClient.get('/master/output-types')
       ]);
-      setItems(resItems.data?.data || resItems.data || []);
-      setOutputTypes(resTypes.data?.data || resTypes.data || []);
+      const rawItems = resItems?.data?.data;
+      const itemsList = Array.isArray(rawItems?.data) ? rawItems.data : Array.isArray(rawItems) ? rawItems : Array.isArray(resItems?.data) ? resItems.data : [];
+      setItems(itemsList);
+
+      const rawTypes = resTypes?.data?.data;
+      const typesList = Array.isArray(rawTypes?.data) ? rawTypes.data : Array.isArray(rawTypes) ? rawTypes : Array.isArray(resTypes?.data) ? resTypes.data : [];
+      setOutputTypes(typesList);
     } catch (error) {
       console.error("Failed to fetch", error);
+      setItems([]);
+      setOutputTypes([]);
     } finally {
       setLoading(false);
     }
@@ -231,7 +241,7 @@ function ContentPlansList({ projectId }: { projectId: string }) {
       </div>
       {loading ? (
         <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div></div>
-      ) : items.length === 0 ? (
+      ) : (!Array.isArray(items) || items.length === 0) ? (
         <div className="text-center text-gray-500 py-4">No content plans found.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -245,7 +255,7 @@ function ContentPlansList({ projectId }: { projectId: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {(Array.isArray(items) ? items : []).map((item) => (
                 <TableRow key={item.id} className="border-b border-gray-200 dark:border-white/[0.05]">
                   <TableCell>{item.title || item.name || "-"}</TableCell>
                   <TableCell>{item.output_type?.name || "-"}</TableCell>
@@ -276,7 +286,7 @@ function ContentPlansList({ projectId }: { projectId: string }) {
           </div>
           <div>
             <Label>Output Type</Label>
-            <Select options={outputTypes.map(t => ({ value: t.id, label: t.name }))} defaultValue={formData.output_type_id} onChange={(val) => setFormData({ ...formData, output_type_id: val })} />
+            <Select options={(Array.isArray(outputTypes) ? outputTypes : []).map(t => ({ value: t.id, label: t.name }))} defaultValue={formData.output_type_id} onChange={(val) => setFormData({ ...formData, output_type_id: val })} />
           </div>
           <div>
             <Label>Status</Label>
@@ -314,9 +324,12 @@ function ScriptsList({ projectId }: { projectId: string }) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/projects/${projectId}/scripts`);
-      setItems(res.data?.data || res.data || []);
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setItems(list);
     } catch (error) {
       console.error("Failed to fetch", error);
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -370,7 +383,7 @@ function ScriptsList({ projectId }: { projectId: string }) {
       </div>
       {loading ? (
         <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div></div>
-      ) : items.length === 0 ? (
+      ) : (!Array.isArray(items) || items.length === 0) ? (
         <div className="text-center text-gray-500 py-4">No scripts found.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -383,7 +396,7 @@ function ScriptsList({ projectId }: { projectId: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {(Array.isArray(items) ? items : []).map((item) => (
                 <TableRow key={item.id} className="border-b border-gray-200 dark:border-white/[0.05]">
                   <TableCell>{item.title || item.name || "-"}</TableCell>
                   <TableCell>

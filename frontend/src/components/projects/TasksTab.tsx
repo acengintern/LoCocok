@@ -67,9 +67,12 @@ export default function TasksTab({ projectId }: TasksTabProps) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/projects/${projectId}/tasks?include=assignments.user`);
-      setTasks(res.data?.data || res.data || []);
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setTasks(list);
     } catch (error) {
       console.error("Failed to fetch tasks", error);
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -78,9 +81,12 @@ export default function TasksTab({ projectId }: TasksTabProps) {
   const fetchUsers = async () => {
     try {
       const res = await apiClient.get('/users');
-      setUsers(res.data?.data || res.data || []);
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setUsers(list);
     } catch (error) {
       console.error("Failed to fetch users", error);
+      setUsers([]);
     }
   };
 
@@ -228,7 +234,7 @@ export default function TasksTab({ projectId }: TasksTabProps) {
         <div className="flex justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
         </div>
-      ) : tasks.length === 0 ? (
+      ) : (!Array.isArray(tasks) || tasks.length === 0) ? (
         <div className="text-center text-gray-500 py-4">No tasks found.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -246,7 +252,7 @@ export default function TasksTab({ projectId }: TasksTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks.map((task) => (
+              {(Array.isArray(tasks) ? tasks : []).map((task) => (
                 <TableRow key={task.id} className="border-b border-gray-200 dark:border-white/[0.05]">
                   <TableCell>#{task.id}</TableCell>
                   <TableCell>{task.title}</TableCell>

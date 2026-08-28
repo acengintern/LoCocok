@@ -19,9 +19,12 @@ export default function ContractsTab({ projectId }: ContractsTabProps) {
       try {
         setLoading(true);
         const res = await apiClient.get(`/projects/${projectId}/contracts`);
-        setContracts(res.data?.data || res.data || []);
+        const raw = res?.data?.data;
+        const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+        setContracts(list);
       } catch (error) {
         console.error("Failed to fetch contracts", error);
+        setContracts([]);
       } finally {
         setLoading(false);
       }
@@ -43,7 +46,7 @@ export default function ContractsTab({ projectId }: ContractsTabProps) {
         <div className="flex justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
         </div>
-      ) : contracts.length === 0 ? (
+      ) : (!Array.isArray(contracts) || contracts.length === 0) ? (
         <div className="text-center text-gray-500 py-4">No contracts found.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -58,7 +61,7 @@ export default function ContractsTab({ projectId }: ContractsTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contracts.map((contract) => (
+              {(Array.isArray(contracts) ? contracts : []).map((contract) => (
                 <TableRow key={contract.id} className="border-b border-gray-200 dark:border-white/[0.05]">
                   <TableCell>{contract.contract_number}</TableCell>
                   <TableCell>{contract.start_date || "-"}</TableCell>

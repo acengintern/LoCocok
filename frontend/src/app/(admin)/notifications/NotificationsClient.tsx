@@ -142,7 +142,7 @@ export default function NotificationsClient() {
               onClick={async () => {
                 try {
                   await Promise.all(
-                    selectedIds.map((id) => apiClient.post(`/notifications/${id}/read`))
+                    selectedIds.map((id) => apiClient.put(`/notifications/${id}/mark-read`))
                   );
                   clearSelection();
                   fetchNotifications();

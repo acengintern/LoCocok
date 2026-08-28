@@ -376,16 +376,17 @@ export default function ProjectDetailPage() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         title="Edit Project & PIC Assignments"
-        maxWidth="2xl"
+        description="Update project scope, schedules, and team assignments."
+        maxWidth="4xl"
       >
-        <div className="space-y-4 max-h-[75vh] overflow-y-auto px-2 py-1">
-          {/* Row 1: Project Name & Client */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label>Project Name *</Label>
+        <div className="space-y-3.5">
+          {/* Row 1: Project Name, Client, Type & Priority */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="sm:col-span-4">
+              <Label className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Project Name *</Label>
               <Input
                 type="text"
-                placeholder="e.g. Social Media Campaign Q3"
+                placeholder="e.g. Social Media Q3"
                 value={editFormData.name}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -394,33 +395,30 @@ export default function ProjectDetailPage() {
               />
             </div>
 
-            <div>
-              <Label>Client *</Label>
+            <div className="sm:col-span-3">
+              <Label className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Client *</Label>
               <Select
                 searchable={true}
-                searchPlaceholder="Cari nama client..."
+                searchPlaceholder="Cari client..."
                 options={clientsList.map((c) => ({ value: String(c.id), label: c.name }))}
                 value={editFormData.client_id}
                 onChange={(val) => setEditFormData((prev) => ({ ...prev, client_id: val }))}
                 placeholder="Select Client"
               />
             </div>
-          </div>
 
-          {/* Row 2: Project Type, Priority & Status */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <Label>Project Type *</Label>
+            <div className="sm:col-span-3">
+              <Label className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Project Type *</Label>
               <Select
                 options={typesList.map((t) => ({ value: String(t.id), label: t.name }))}
                 value={editFormData.project_type_id}
                 onChange={(val) => setEditFormData((prev) => ({ ...prev, project_type_id: val }))}
-                placeholder="Select Project Type"
+                placeholder="Select Type"
               />
             </div>
 
-            <div>
-              <Label>Priority</Label>
+            <div className="sm:col-span-2">
+              <Label className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Priority</Label>
               <Select
                 options={[
                   { value: "LOW", label: "Low" },
@@ -430,12 +428,59 @@ export default function ProjectDetailPage() {
                 ]}
                 value={editFormData.priority}
                 onChange={(val) => setEditFormData((prev) => ({ ...prev, priority: val }))}
-                placeholder="Select Priority"
+                placeholder="Priority"
               />
             </div>
+          </div>
 
-            <div>
-              <Label>Status</Label>
+          {/* Row 2: PIC Team Assignments */}
+          <div className="rounded-xl border border-gray-200/80 bg-gray-50/70 p-3 dark:border-gray-800 dark:bg-white/[0.02]">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-2">
+              <span className="flex items-center justify-center w-4 h-4 rounded-md bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </span>
+              <span>PIC &amp; Team Assignments</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Account Executive (AE)</Label>
+                <Select
+                  options={aeOptions}
+                  value={editFormData.ae_id}
+                  onChange={(val) => setEditFormData((prev) => ({ ...prev, ae_id: val }))}
+                  placeholder="Pilih PIC AE"
+                />
+              </div>
+
+              <div>
+                <Label className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Social Media (SMS)</Label>
+                <Select
+                  options={smsOptions}
+                  value={editFormData.sms_id}
+                  onChange={(val) => setEditFormData((prev) => ({ ...prev, sms_id: val }))}
+                  placeholder="Pilih PIC SMS"
+                />
+              </div>
+
+              <div>
+                <Label className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Creative Director (CD)</Label>
+                <Select
+                  options={cdOptions}
+                  value={editFormData.cd_id}
+                  onChange={(val) => setEditFormData((prev) => ({ ...prev, cd_id: val }))}
+                  placeholder="Pilih PIC CD"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Status, Start Date & End Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="sm:col-span-4">
+              <Label className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Production Status</Label>
               <Select
                 options={[
                   { value: "CONTENT_PLANNING", label: "Content Planning" },
@@ -455,53 +500,8 @@ export default function ProjectDetailPage() {
                 placeholder="Select Status"
               />
             </div>
-          </div>
 
-          {/* Row 3: PIC Team Assignments */}
-          <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-white/[0.02] space-y-3">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>PIC &amp; Team Assignments</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <Label>PIC Account Executive (AE)</Label>
-                <Select
-                  options={aeOptions}
-                  value={editFormData.ae_id}
-                  onChange={(val) => setEditFormData((prev) => ({ ...prev, ae_id: val }))}
-                  placeholder="Pilih PIC AE"
-                />
-              </div>
-
-              <div>
-                <Label>PIC Social Media (SMS)</Label>
-                <Select
-                  options={smsOptions}
-                  value={editFormData.sms_id}
-                  onChange={(val) => setEditFormData((prev) => ({ ...prev, sms_id: val }))}
-                  placeholder="Pilih PIC SMS"
-                />
-              </div>
-
-              <div>
-                <Label>Creative Director (CD)</Label>
-                <Select
-                  options={cdOptions}
-                  value={editFormData.cd_id}
-                  onChange={(val) => setEditFormData((prev) => ({ ...prev, cd_id: val }))}
-                  placeholder="Pilih PIC CD"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 4: Start Date & End Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div className="sm:col-span-4">
               <DatePicker
                 id="edit_detail_start_date"
                 label="Start Date"
@@ -511,7 +511,7 @@ export default function ProjectDetailPage() {
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-4">
               <DatePicker
                 id="edit_detail_end_date"
                 label="Deadline (End Date)"
@@ -522,9 +522,9 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          {/* Row 5: Notes / Brief */}
+          {/* Row 4: Notes / Scope Brief */}
           <div>
-            <Label>Project Notes / Scope Brief</Label>
+            <Label className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Project Notes / Scope Brief</Label>
             <textarea
               rows={2}
               placeholder="Catatan ruang lingkup project, deliverables, atau instruksi khusus..."
@@ -533,17 +533,24 @@ export default function ProjectDetailPage() {
                 const val = e.target.value;
                 setEditFormData((prev) => ({ ...prev, notes: val }));
               }}
-              className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-800 dark:bg-gray-900 dark:text-white"
+              className="w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-800 dark:bg-gray-900/60 dark:text-white transition-all shadow-theme-xs resize-none"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)} disabled={saving}>
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100 dark:border-gray-800">
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)} disabled={saving} className="px-4 py-2 text-sm">
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} disabled={saving} className="bg-brand-500 hover:bg-brand-600 text-white">
-              {saving ? "Saving..." : "Save Changes"}
+            <Button onClick={handleSaveEdit} disabled={saving} className="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2 text-sm font-semibold shadow-sm">
+              {saving ? (
+                <span className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </span>
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </div>
         </div>

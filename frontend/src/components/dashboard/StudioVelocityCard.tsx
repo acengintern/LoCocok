@@ -69,7 +69,7 @@ export default function StudioVelocityCard() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
         <div>
           <div className="flex items-center gap-2 font-mono text-[11px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
-            <span>// STUDIO PRODUCTION VELOCITY & SLA HEALTH</span>
+            <span>{"// STUDIO PRODUCTION VELOCITY & SLA HEALTH"}</span>
           </div>
           <h3 className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-white mt-0.5">
             Performance & Turnaround Intelligence

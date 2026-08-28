@@ -85,12 +85,12 @@ const AppHeader: React.FC = () => {
           </button>
 
           <Link href="/" className="lg:hidden flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 p-1 border border-gray-200/60 dark:border-gray-700/50 flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 p-1 border border-gray-200/60 dark:border-gray-700/50 flex items-center justify-center shadow-sm shrink-0 overflow-hidden">
               <Image
                 width={36}
                 height={36}
-                className="w-full h-full object-contain"
-                src="/images/logo/loco.png"
+                className="w-full h-full object-contain rounded-lg"
+                src="/images/logo/logo.jpeg"
                 alt={settings.agency_name || "Logo"}
                 priority
               />

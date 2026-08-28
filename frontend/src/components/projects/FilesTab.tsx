@@ -76,9 +76,12 @@ export default function FilesTab({ projectId }: FilesTabProps) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/projects/${projectId}/files?include=fileType,uploadedBy,versions`);
-      setFiles(res.data?.data || res.data || []);
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setFiles(list);
     } catch (error) {
       console.error("Failed to fetch files", error);
+      setFiles([]);
     } finally {
       setLoading(false);
     }
@@ -86,10 +89,13 @@ export default function FilesTab({ projectId }: FilesTabProps) {
 
   const fetchFileTypes = async () => {
     try {
-      const res = await apiClient.get('/file-types');
-      setFileTypes(res.data?.data || res.data || []);
+      const res = await apiClient.get('/master/file-types');
+      const raw = res?.data?.data;
+      const list = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : Array.isArray(res?.data) ? res.data : [];
+      setFileTypes(list);
     } catch (error) {
       console.error("Failed to fetch file types", error);
+      setFileTypes([]);
     }
   };
 
@@ -196,7 +202,7 @@ export default function FilesTab({ projectId }: FilesTabProps) {
         <div className="flex justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
         </div>
-      ) : files.length === 0 ? (
+      ) : (!Array.isArray(files) || files.length === 0) ? (
         <div className="text-center text-gray-500 py-4">No files uploaded yet.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -212,7 +218,7 @@ export default function FilesTab({ projectId }: FilesTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {files.map((file) => {
+              {(Array.isArray(files) ? files : []).map((file) => {
                 const uploaderName = file.uploaded_by ? `${file.uploaded_by.first_name} ${file.uploaded_by.last_name || ''}` : "Unknown";
                 const currentVersionNum = file.versions && file.versions.length > 0 
                   ? Math.max(...file.versions.map(v => v.version_number)) 

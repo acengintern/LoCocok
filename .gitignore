@@ -54,11 +54,3 @@ docx_content.txt
 CRUD_AUDIT_REPORT.md
 fase*.md
 tmp-*.md
-
-# Local launcher scripts
-run.bat
-*.bat
-run.ps1
-*.ps1
-
-

@@ -10,6 +10,7 @@ use App\Models\Client;
 use App\Models\Task;
 use App\Models\ContentPlan;
 use App\Models\Approval;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -22,117 +23,125 @@ class DashboardController extends Controller
         Gate::authorize('view-dashboard');
 
         $user = $request->user();
+        $today = Carbon::today();
         
-        $isAdminOrManager = $user->hasRole(['System Administrator', 'Creative Director']);
+        $totalProjects = Project::count();
+        $activeProjects = Project::whereNotIn('status', ['DONE', 'CANCELLED', 'HOLD', 'EXPIRED'])->count();
+        $completedProjects = Project::where('status', 'DONE')->count();
+        $holdProjects = Project::where('status', 'HOLD')->count();
+        $expiredProjects = Project::where('status', 'EXPIRED')->count();
         
-        if ($isAdminOrManager) {
-            $totalProjects = Project::count();
-            $activeProjects = Project::whereNotIn('status', ['DONE', 'CANCELLED', 'HOLD', 'EXPIRED'])->count();
-            $completedProjects = Project::where('status', 'DONE')->count();
-            $totalClients = Client::count();
-            $revenue = DB::table('project_financials')->sum('nett_project_revenue');
-            $pendingApprovals = Approval::whereNull('reviewed_at')->count();
-            
-            // Status distribution
-            $statusCounts = Project::select('status', DB::raw('count(*) as count'))
-                ->groupBy('status')
-                ->pluck('count', 'status')
-                ->toArray();
+        // Overtime projects: current date > end date and status != DONE
+        $overtimeProjects = Project::whereNotIn('status', ['DONE', 'CANCELLED'])
+            ->whereNotNull('end_date')
+            ->whereDate('end_date', '<', $today)
+            ->count();
 
-            // Output deliverables distribution (target vs actual by output type)
-            $outputDeliverables = DB::table('project_outputs')
-                ->join('output_types', 'project_outputs.output_type_id', '=', 'output_types.id')
-                ->select(
-                    'output_types.name',
-                    DB::raw('SUM(project_outputs.target_qty) as total_target'),
-                    DB::raw('SUM(project_outputs.actual_qty) as total_actual')
-                )
-                ->groupBy('output_types.name')
-                ->orderByDesc('total_target')
-                ->take(6)
-                ->get();
+        // Expiry warning: end date within 14 days
+        $expiryWarningProjects = Project::whereNotIn('status', ['DONE', 'CANCELLED', 'HOLD', 'EXPIRED'])
+            ->whereNotNull('end_date')
+            ->whereBetween('end_date', [$today, $today->copy()->addDays(14)])
+            ->count();
 
-            // Task priority distribution for active tasks
-            $priorityCounts = Task::whereNotIn('status', ['DONE', 'CANCELLED', 'PUBLISH', 'HOLD', 'EXPIRED'])
-                ->select('priority', DB::raw('count(*) as count'))
-                ->groupBy('priority')
-                ->pluck('count', 'priority')
-                ->toArray();
+        $totalClients = Client::count();
+        $revenue = DB::table('project_financials')->sum('nett_project_revenue');
+        $pendingApprovals = Approval::whereNull('reviewed_at')->count();
+        
+        // Status distribution
+        $statusCounts = Project::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
 
-            // Task completion metrics
-            $totalTasks = Task::count();
-            $completedTasks = Task::where('status', 'DONE')->count();
-            $taskCompletionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 100;
-
-            // Recent 6 projects
-            $recentProjects = Project::with([
-                'client:id,name',
-                'projectType:id,name',
-                'ae:id,name',
-                'sms:id,name'
-            ])
-            ->latest()
+        // Output deliverables distribution
+        $outputDeliverables = DB::table('project_outputs')
+            ->join('output_types', 'project_outputs.output_type_id', '=', 'output_types.id')
+            ->select(
+                'output_types.name',
+                DB::raw('SUM(project_outputs.target_qty) as total_target'),
+                DB::raw('SUM(project_outputs.actual_qty) as total_actual')
+            )
+            ->groupBy('output_types.name')
+            ->orderByDesc('total_target')
             ->take(6)
             ->get();
-            
-            // Studio SLA & Velocity Metrics
-            $nearDeadlineCount = Task::whereNotIn('status', ['DONE', 'CANCELLED', 'PUBLISH', 'HOLD', 'EXPIRED'])
-                ->whereNotNull('end_date')
-                ->where('end_date', '<=', now()->addDays(2))
-                ->count();
 
-            $totalActiveCrew = DB::table('users')->count();
+        // Task priority distribution for active tasks
+        $priorityCounts = Task::whereNotIn('status', ['DONE', 'CANCELLED', 'PUBLISH', 'HOLD', 'EXPIRED'])
+            ->select('priority', DB::raw('count(*) as count'))
+            ->groupBy('priority')
+            ->pluck('count', 'priority')
+            ->toArray();
 
-            return $this->successResponse([
-                'total_projects' => $totalProjects,
-                'active_projects' => $activeProjects,
-                'completed_projects' => $completedProjects,
-                'total_clients' => $totalClients,
-                'revenue' => (float) $revenue,
-                'pending_approvals' => $pendingApprovals,
-                'status_distribution' => $statusCounts,
-                'output_deliverables' => $outputDeliverables,
-                'priority_distribution' => $priorityCounts,
-                'sla_metrics' => [
-                    'on_time_rate' => 96.8,
-                    'avg_cycle_days' => 3.4,
-                    'first_pass_qc_rate' => 91.2,
-                    'at_risk_deadlines' => $nearDeadlineCount,
-                ],
-                'task_metrics' => [
-                    'total' => $totalTasks,
-                    'completed' => $completedTasks,
-                    'rate' => $taskCompletionRate,
-                ],
-                'recent_projects' => $recentProjects
-            ]);
-        } else {
-            // For an AE/SMS/Design/Video (Normal user)
-            $activeProjects = Project::whereNotIn('status', ['DONE', 'CANCELLED', 'HOLD', 'EXPIRED'])
-                ->where(function($q) use ($user) {
-                    $q->where('ae_id', $user->id)
-                      ->orWhere('sms_id', $user->id)
-                      ->orWhere('cd_id', $user->id);
-                })->count();
-                
-            $tasksPending = Task::whereNotIn('status', ['DONE', 'CANCELLED', 'PUBLISH', 'HOLD', 'EXPIRED'])
-                ->whereHas('assignments', function($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                })->count();
-                
-            $startOfWeek = now()->startOfWeek();
-            $endOfWeek = now()->endOfWeek();
-            
-            $contentPlansDue = ContentPlan::whereBetween('posting_date', [$startOfWeek, $endOfWeek])
-                ->where('created_by', $user->id)
-                ->count();
-                
-            return $this->successResponse([
-                'active_projects' => $activeProjects,
-                'tasks_pending' => $tasksPending,
-                'content_plans_due_this_week' => $contentPlansDue
-            ]);
-        }
+        // Task metrics
+        $totalTasks = Task::count();
+        $completedTasks = Task::where('status', 'DONE')->count();
+        $pendingQCTasks = Task::whereIn('status', ['PREVIEW_INTERNAL', 'PREVIEW_CD'])->count();
+        $revisionTasks = Task::where('status', 'REVISION')->count();
+        $readyToPublishTasks = Task::where('status', 'READY_TO_UPLOAD')->count();
+        $taskCompletionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 100;
+
+        // Recent 6 projects
+        $recentProjects = Project::with([
+            'client:id,name',
+            'projectType:id,name',
+            'ae:id,name',
+            'sms:id,name'
+        ])
+        ->latest()
+        ->take(6)
+        ->get();
+        
+        // Near deadline
+        $nearDeadlineCount = Task::whereNotIn('status', ['DONE', 'CANCELLED', 'PUBLISH', 'HOLD', 'EXPIRED'])
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<=', $today->copy()->addDays(2))
+            ->count();
+
+        // AE specific breakdown
+        $aeProjects = Project::with('client', 'projectType')
+            ->whereNotNull('ae_id')
+            ->select('ae_id', DB::raw('count(*) as total'), DB::raw("SUM(CASE WHEN status NOT IN ('DONE', 'CANCELLED') THEN 1 ELSE 0 END) as active"))
+            ->groupBy('ae_id')
+            ->get();
+
+        // Today's task list for SMS / Daily Schedule
+        $todayTasks = Task::with(['project.client', 'assignments.user'])
+            ->whereDate('due_date', $today)
+            ->take(10)
+            ->get();
+
+        return $this->successResponse([
+            'total_projects' => $totalProjects,
+            'active_projects' => $activeProjects,
+            'completed_projects' => $completedProjects,
+            'hold_projects' => $holdProjects,
+            'expired_projects' => $expiredProjects,
+            'overtime_projects' => $overtimeProjects,
+            'expiry_warning_projects' => $expiryWarningProjects,
+            'total_clients' => $totalClients,
+            'revenue' => (float) $revenue,
+            'pending_approvals' => $pendingApprovals,
+            'pending_qc_tasks' => $pendingQCTasks,
+            'revision_tasks' => $revisionTasks,
+            'ready_to_publish_tasks' => $readyToPublishTasks,
+            'status_distribution' => $statusCounts,
+            'output_deliverables' => $outputDeliverables,
+            'priority_distribution' => $priorityCounts,
+            'sla_metrics' => [
+                'on_time_rate' => 96.8,
+                'avg_cycle_days' => 3.4,
+                'first_pass_qc_rate' => 91.2,
+                'at_risk_deadlines' => $nearDeadlineCount,
+            ],
+            'task_metrics' => [
+                'total' => $totalTasks,
+                'completed' => $completedTasks,
+                'rate' => $taskCompletionRate,
+            ],
+            'recent_projects' => $recentProjects,
+            'today_tasks' => $todayTasks,
+        ]);
     }
 
     public function workload(Request $request)

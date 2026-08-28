@@ -9,10 +9,39 @@ use App\Http\Resources\BriefResource;
 use App\Models\Brief;
 use App\Models\Project;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 
 class BriefController extends Controller
 {
     use ApiResponse;
+
+    public function indexGlobal(Request $request)
+    {
+        $query = Brief::with(['project.client', 'createdBy']);
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('brief_text', 'like', "%{$s}%")
+                  ->orWhere('objective', 'like', "%{$s}%")
+                  ->orWhere('platform', 'like', "%{$s}%")
+                  ->orWhereHas('project', function ($pq) use ($s) {
+                      $pq->where('name', 'like', "%{$s}%");
+                  });
+            });
+        }
+
+        $briefs = $query->latest()->paginate($request->get('per_page', 25));
+
+        return $this->successResponse(
+            BriefResource::collection($briefs)->response()->getData(true),
+            'Global briefs retrieved successfully'
+        );
+    }
 
     public function index(Project $project)
     {

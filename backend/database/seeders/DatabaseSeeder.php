@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,13 +19,51 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
         $this->call(SettingSeeder::class);
+        $this->call(MasterDataExcelSeeder::class);
 
-        // User::factory(10)->create();
+        // Seed Default README Test Accounts
+        $defaultAccounts = [
+            [
+                'name' => 'System Administrator',
+                'email' => 'admin@locotrack.com',
+                'username' => 'admin',
+                'role' => 'System Administrator',
+            ],
+            [
+                'name' => 'Creative Director',
+                'email' => 'director@locotrack.com',
+                'username' => 'director',
+                'role' => 'Creative Director',
+            ],
+            [
+                'name' => 'Account Executive',
+                'email' => 'ae@locotrack.com',
+                'username' => 'ae_user',
+                'role' => 'Account Executive',
+            ],
+            [
+                'name' => 'Team Member / Designer',
+                'email' => 'designer@locotrack.com',
+                'username' => 'designer',
+                'role' => 'Graphic Designer',
+            ],
+        ];
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'username' => 'testuser',
-        ]);
+        foreach ($defaultAccounts as $account) {
+            $user = User::firstOrCreate(
+                ['email' => $account['email']],
+                [
+                    'name' => $account['name'],
+                    'username' => $account['username'],
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            if (!empty($account['role'])) {
+                $role = Role::firstOrCreate(['name' => $account['role'], 'guard_name' => 'web']);
+                $user->syncRoles([$role]);
+            }
+        }
     }
 }

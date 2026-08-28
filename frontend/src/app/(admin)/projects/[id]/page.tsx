@@ -11,6 +11,7 @@ import OutputsTab from "@/components/projects/OutputsTab";
 import ContentPlanningTab from "@/components/projects/ContentPlanningTab";
 import TasksTab from "@/components/projects/TasksTab";
 import FilesTab from "@/components/projects/FilesTab";
+import ProjectTimelineTab from "@/components/projects/ProjectTimelineTab";
 import Modal from "@/components/common/Modal";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
@@ -367,11 +368,7 @@ export default function ProjectDetailPage() {
         {activeTab === "tasks" && <TasksTab projectId={id} />}
         {activeTab === "financial" && showFinancial && <FinancialTab projectId={id} />}
         {activeTab === "files" && <FilesTab projectId={id} />}
-        {activeTab === "timeline" && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03] text-center text-gray-500">
-            Timeline module will be implemented in subsequent tasks.
-          </div>
-        )}
+        {activeTab === "timeline" && <ProjectTimelineTab projectId={id} />}
       </div>
 
       {/* Edit Project Modal with Full PIC Support */}

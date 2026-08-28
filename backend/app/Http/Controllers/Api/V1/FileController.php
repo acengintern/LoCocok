@@ -9,11 +9,42 @@ use App\Http\Resources\FileResource;
 use App\Models\File;
 use App\Models\Project;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class FileController extends Controller
 {
     use ApiResponse;
+
+    public function indexGlobal(Request $request)
+    {
+        $query = File::with(['project.client', 'currentVersion', 'fileType', 'uploadedBy']);
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('file_type_id')) {
+            $query->where('file_type_id', $request->file_type_id);
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")
+                  ->orWhereHas('project', function ($pq) use ($s) {
+                      $pq->where('name', 'like', "%{$s}%");
+                  });
+            });
+        }
+
+        $files = $query->latest()->paginate($request->get('per_page', 25));
+
+        return $this->successResponse(
+            FileResource::collection($files)->response()->getData(true),
+            'Global files retrieved successfully'
+        );
+    }
 
     public function index(Project $project)
     {

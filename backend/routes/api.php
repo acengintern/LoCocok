@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityLogController;
+use App\Http\Controllers\Api\V1\AdditionalLoadController;
 use App\Http\Controllers\Api\V1\BriefController;
 use App\Http\Controllers\Api\V1\ContentPlanController;
 use App\Http\Controllers\Api\V1\DashboardController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\V1\ProjectCostController;
 use App\Http\Controllers\Api\V1\ProjectFinancialController;
 use App\Http\Controllers\Api\V1\ProjectPaymentController;
 use App\Http\Controllers\Api\V1\ProjectTypeController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\ScriptController;
 use App\Http\Controllers\Api\V1\TaskAssignmentController;
 use App\Http\Controllers\Api\V1\TaskController;
@@ -84,21 +86,31 @@ Route::prefix('v1')->group(function () {
         // Outputs
         Route::apiResource('projects.outputs', ProjectOutputController::class);
 
-        // Content Planning
+        // Content Planning Global & Project Scoped
+        Route::get('briefs', [BriefController::class, 'indexGlobal']);
         Route::apiResource('projects.briefs', BriefController::class)->scoped();
+
+        Route::get('content-plans', [ContentPlanController::class, 'indexGlobal']);
         Route::apiResource('projects.content-plans', ContentPlanController::class)->scoped();
+
+        Route::get('scripts', [ScriptController::class, 'indexGlobal']);
         Route::apiResource('projects.scripts', ScriptController::class)->scoped();
 
         // Tasks
         Route::get('tasks', [TaskController::class, 'indexGlobal']);
         Route::apiResource('projects.tasks', TaskController::class)->scoped();
 
+        // Additional Loads & Workload Clash Detection
+        Route::apiResource('additional-loads', AdditionalLoadController::class);
+        Route::get('workload-check', [AdditionalLoadController::class, 'checkClash']);
+
         // Task Assignments
         Route::apiResource('projects.tasks.assignments', TaskAssignmentController::class)
             ->only(['index', 'store', 'destroy'])
             ->scoped();
 
-        // Files
+        // Files Global & Project Scoped
+        Route::get('files', [FileController::class, 'indexGlobal']);
         Route::apiResource('projects.files', FileController::class)->only(['index', 'store', 'show', 'destroy'])->scoped();
 
         // File Versions
@@ -110,6 +122,16 @@ Route::prefix('v1')->group(function () {
         Route::put('projects/{project}/financials', [ProjectFinancialController::class, 'update']);
         Route::apiResource('projects.payments', ProjectPaymentController::class);
         Route::apiResource('projects.costs', ProjectCostController::class);
+
+        // Reports Suite
+        Route::prefix('reports')->group(function () {
+            Route::get('project-overview', [ReportController::class, 'projectOverview']);
+            Route::get('workload-summary', [ReportController::class, 'workloadSummary']);
+            Route::get('output-summary', [ReportController::class, 'outputSummary']);
+            Route::get('timeline-deadlines', [ReportController::class, 'timelineDeadlines']);
+            Route::get('client-summary', [ReportController::class, 'clientSummary']);
+            Route::get('financial-summary', [ReportController::class, 'financialSummary']);
+        });
 
         // Notifications
         Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);

@@ -9,10 +9,52 @@ use App\Http\Resources\ContentPlanResource;
 use App\Models\ContentPlan;
 use App\Models\Project;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 
 class ContentPlanController extends Controller
 {
     use ApiResponse;
+
+    public function indexGlobal(Request $request)
+    {
+        $query = ContentPlan::with(['project.client', 'outputType', 'createdBy']);
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('platform')) {
+            $query->where('platform', $request->platform);
+        }
+
+        if ($request->filled('output_type_id')) {
+            $query->where('output_type_id', $request->output_type_id);
+        }
+
+        if ($request->filled('posting_date')) {
+            $query->whereDate('posting_date', $request->posting_date);
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('content_pillar', 'like', "%{$s}%")
+                  ->orWhere('content_type', 'like', "%{$s}%")
+                  ->orWhere('ideation', 'like', "%{$s}%")
+                  ->orWhere('caption', 'like', "%{$s}%")
+                  ->orWhereHas('project', function ($pq) use ($s) {
+                      $pq->where('name', 'like', "%{$s}%");
+                  });
+            });
+        }
+
+        $contentPlans = $query->latest()->paginate($request->get('per_page', 25));
+
+        return $this->successResponse(
+            ContentPlanResource::collection($contentPlans)->response()->getData(true),
+            'Global content plans retrieved successfully'
+        );
+    }
 
     public function index(Project $project)
     {
